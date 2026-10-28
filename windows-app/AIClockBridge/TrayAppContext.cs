@@ -20,6 +20,7 @@ sealed class TrayAppContext : ApplicationContext
     readonly ToolStripMenuItem _codexUsageItem = new("Codex …") { Enabled = false };
     readonly ToolStripMenuItem _deviceInfoItem = new("设备：未设置") { Enabled = false };
     readonly Dictionary<string, ToolStripMenuItem> _modeItems = new();
+    readonly AutoRotation _rotation = new();
 
     public TrayAppContext(StatusService service, UsageFetcher usage, NetSpeedMonitor netMonitor,
                           NowPlayingMonitor nowPlaying, StockMonitor stockMonitor, int port)
@@ -45,9 +46,11 @@ sealed class TrayAppContext : ApplicationContext
         {
             _usage.Refresh();
             RefreshUsageLines();
+            _rotation.SyncChecks();
             _ = RefreshDeviceSection();
         };
         _usage.OnUpdate = RefreshUsageLines;
+        _rotation.Start();
     }
 
     /// User-supplied device logo (bezel + dark screen + smiley + green status
@@ -89,6 +92,7 @@ sealed class TrayAppContext : ApplicationContext
             displayMenu.DropDownItems.Add(item);
         }
         _menu.Items.Add(displayMenu);
+        _menu.Items.Add(_rotation.BuildMenu());
         // (屏幕亮度在左键弹出的镜像页底部，做成滑条了)
 
         _menu.Items.Add(MakeItem("设置自选股…", (_, _) =>
@@ -262,6 +266,7 @@ sealed class TrayAppContext : ApplicationContext
 
     async Task SetDisplayMode(string mode)
     {
+        _rotation.Disable(); // a hand-picked page stops the rotation
         try
         {
             await DeviceClient.SetDisplayMode(mode);
