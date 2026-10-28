@@ -99,7 +99,7 @@ sealed class TrayAppContext : ApplicationContext
         {
             var input = InputDialog.Show(
                 "自选股",
-                "逗号分隔的行情代码：sh/sz=A股、hk=港股、us=美股、tw=台股\n例如 sh600519,hk00700,usAAPL,tw2330（设备最多显示 4 只）",
+                "逗号分隔的行情代码：sh/sz=A股、hk=港股、us=美股、tw=台股、cc=加密货币\n例如 tw2330,usAAPL,ccBTC,ccETH（设备最多显示 4 只）",
                 string.Join(",", StockMonitor.Symbols), "sh000001,usAAPL");
             if (input != null)
             {

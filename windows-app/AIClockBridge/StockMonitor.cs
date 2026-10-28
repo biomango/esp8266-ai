@@ -16,6 +16,9 @@ namespace AIClockBridge;
 // TWSE's free MIS endpoint instead (Tencent has no TW market):
 //   https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_2330.tw|otc_2330.tw
 // Listed (tse) and OTC (otc) are both queried; only the one that exists answers.
+//
+// Crypto ("ccBTC", "ccETH", "ccDOGE") comes from Binance's public 24h ticker
+// (no key): ccBTC -> BTCUSDT. The change shown is the rolling 24h change.
 sealed class StockMonitor
 {
     public record Row(string Code, string Name, string Price, string Pct, int Up);
@@ -48,6 +51,9 @@ sealed class StockMonitor
         var body = t[2..].ToUpperInvariant();
         if (prefix == "hk" && body.Length < 5 && body.All(char.IsDigit))
             body = body.PadLeft(5, '0');
+        // crypto: "ccBTC" -> "ccBTCUSDT" (unless a quote asset is already there)
+        if (prefix == "cc" && !CryptoQuotes.Any(q => body.EndsWith(q)))
+            body += "USDT";
         return prefix + body;
     }
 
@@ -68,6 +74,12 @@ sealed class StockMonitor
         h.DefaultRequestHeaders.Referrer = new Uri(TwIndexUrl);
         return h;
     }
+
+    static readonly string[] CryptoHosts = { "https://api.binance.com", "https://data-api.binance.vision" };
+    static readonly string[] CryptoQuotes = { "FDUSD", "USDT", "USDC" };
+
+    static bool IsCrypto(string symbol) =>
+        symbol.StartsWith("cc", StringComparison.OrdinalIgnoreCase) && symbol.Length > 2;
 
     static bool IsTw(string symbol) =>
         symbol.StartsWith("tw", StringComparison.OrdinalIgnoreCase) && symbol.Length > 2;
@@ -172,8 +184,9 @@ sealed class StockMonitor
             lock (_lock) _rows = Array.Empty<Row>();
             return;
         }
-        var gtimg = symbols.Where(x => !IsTw(x)).ToArray();
+        var gtimg = symbols.Where(x => !IsTw(x) && !IsCrypto(x)).ToArray();
         var tw = symbols.Where(IsTw).ToArray();
+        var cc = symbols.Where(IsCrypto).ToArray();
 
         if (gtimg.Length > 0)
         {
@@ -188,6 +201,11 @@ sealed class StockMonitor
         {
             try { Merge(tw, await FetchTw(tw)); }
             catch { _twWarm = false; /* keep previous rows, re-warm the session next time */ }
+        }
+        if (cc.Length > 0)
+        {
+            try { Merge(cc, await FetchCrypto(cc)); }
+            catch { /* keep previous rows */ }
         }
 
         Row[] rows;
@@ -235,6 +253,58 @@ sealed class StockMonitor
             if (map.Count > 0 || attempt >= 1) return map;
             _twWarm = false; // empty answer: session probably expired, re-warm once
         }
+    }
+
+    /// One Binance 24h-ticker request per symbol (a single bad symbol would fail
+    /// a batch request). Tries the main API, then the market-data mirror. A symbol
+    /// that cannot be fetched keeps its last good row instead of vanishing.
+    async Task<Dictionary<string, Row>> FetchCrypto(string[] symbols)
+    {
+        var tasks = symbols.Select(async sym =>
+        {
+            var key = sym.ToLowerInvariant();
+            var pair = sym[2..].ToUpperInvariant();
+            foreach (var host in CryptoHosts)
+            {
+                try
+                {
+                    var json = await Http.GetStringAsync($"{host}/api/v3/ticker/24hr?symbol={pair}");
+                    return (K: key, R: ParseCrypto(json, pair));
+                }
+                catch { /* try the next host */ }
+            }
+            Row old = null;
+            lock (_lock) _cache.TryGetValue(key, out old);
+            return (K: key, R: old);
+        });
+        var results = await Task.WhenAll(tasks);
+        return results.Where(x => x.R != null).ToDictionary(x => x.K, x => x.R);
+    }
+
+    static Row ParseCrypto(string json, string pair)
+    {
+        using var doc = JsonDocument.Parse(json);
+        var r = doc.RootElement;
+        string S(string k) => r.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String
+            ? v.GetString() ?? "" : "";
+        if (!double.TryParse(S("lastPrice"), NumberStyles.Float, CultureInfo.InvariantCulture, out var price) ||
+            !double.TryParse(S("priceChange"), NumberStyles.Float, CultureInfo.InvariantCulture, out var chg) ||
+            !double.TryParse(S("priceChangePercent"), NumberStyles.Float, CultureInfo.InvariantCulture, out var pct))
+            throw new FormatException("bad ticker");
+        var quote = CryptoQuotes.FirstOrDefault(q => pair.EndsWith(q)) ?? "";
+        var asset = quote.Length > 0 ? pair[..^quote.Length] : pair;
+        return new Row(asset, quote.Length > 0 ? $"{asset}/{quote}" : asset, FormatCryptoPrice(price),
+            $"{pct:+0.00;-0.00;+0.00}%", chg > 0 ? 1 : (chg < 0 ? -1 : 0));
+    }
+
+    /// Enough decimals for small coins, but short enough for the 240px row.
+    static string FormatCryptoPrice(double p)
+    {
+        if (p >= 10000) return $"{p:F0}";
+        if (p >= 1000) return $"{p:F1}";
+        if (p >= 1) return $"{p:F2}";
+        if (p >= 0.01) return $"{p:F4}";
+        return $"{p:F6}";
     }
 
     /// "tw2330" -> tse_2330.tw + otc_2330.tw; "twT00" (TAIEX index) -> tse_t00.tw
