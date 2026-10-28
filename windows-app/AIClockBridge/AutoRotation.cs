@@ -26,7 +26,9 @@ sealed class AutoRotation
 
     public static bool Enabled
     {
-        get => Settings.Get(EnabledKey) == "1";
+        // never configured -> on: the feature was asked for, so don't make the
+        // user hunt for a hidden switch before anything happens
+        get { var raw = Settings.Get(EnabledKey); return raw.Length == 0 || raw == "1"; }
         set => Settings.Set(EnabledKey, value ? "1" : "0");
     }
 
@@ -56,6 +58,8 @@ sealed class AutoRotation
     readonly Dictionary<string, ToolStripMenuItem> _pageItems = new();
     readonly Dictionary<int, ToolStripMenuItem> _secItems = new();
     ToolStripMenuItem _enableItem;
+    ToolStripMenuItem _statusItem;
+    string _lastMsg = "";
     ToolStripMenuItem _customSecItem;
     int _index = -1;
     bool _busy;
@@ -71,31 +75,48 @@ sealed class AutoRotation
     public void Disable()
     {
         Enabled = false;
+        _lastMsg = "已因手动切换页面而暂停，要继续请重新勾选「启用轮播」";
         SyncChecks();
     }
 
     async Task Step()
     {
-        if (_busy || !Enabled || DeviceClient.Host.Length == 0) return;
+        if (_busy || !Enabled) return;
+        if (DeviceClient.Host.Length == 0)
+        {
+            _lastMsg = "未设置设备地址（先用「自动查找并配对设备」）";
+            return;
+        }
         var modes = SelectedModes;
-        if (modes.Length == 0) return;
+        if (modes.Length == 0)
+        {
+            _lastMsg = "没有勾选任何页面";
+            return;
+        }
         _busy = true;
         try
         {
             _index = (_index + 1) % modes.Length;
             var next = modes[_index];
+            var title = Pages.First(p => p.Mode == next).Title;
             if (modes.Length == 1)
             {
                 // a single page: only (re)send when the device is not on it, e.g.
                 // after a reboot; re-sending every tick would redraw and flicker
                 var info = await DeviceClient.FetchInfo();
-                if (info.Mode == next) return;
+                if (info.Mode == next)
+                {
+                    _lastMsg = $"停留在 {title}";
+                    return;
+                }
             }
             await DeviceClient.SetDisplayMode(next);
+            _lastMsg = $"{DateTime.Now:HH:mm:ss} 已切换到 {title}";
         }
-        catch
+        catch (Exception e)
         {
             // device offline / busy: try again on the next tick
+            _lastMsg = $"{DateTime.Now:HH:mm:ss} 切换失败：{e.Message}";
         }
         finally
         {
@@ -106,11 +127,17 @@ sealed class AutoRotation
     public ToolStripMenuItem BuildMenu()
     {
         var root = new ToolStripMenuItem("自动轮播");
+        root.DropDownOpening += (_, _) => SyncChecks();
+
+        _statusItem = new ToolStripMenuItem("状态：…") { Enabled = false };
+        root.DropDownItems.Add(_statusItem);
 
         _enableItem = new ToolStripMenuItem("启用轮播") { CheckOnClick = true };
         _enableItem.Click += async (_, _) =>
         {
             Enabled = _enableItem.Checked; // CheckOnClick already flipped it
+            _lastMsg = "";
+            SyncChecks();
             if (Enabled) await Step();
         };
         root.DropDownItems.Add(_enableItem);
@@ -168,6 +195,8 @@ sealed class AutoRotation
     {
         if (_enableItem == null) return;
         _enableItem.Checked = Enabled;
+        _statusItem.Text = "状态：" + (_lastMsg.Length > 0 ? _lastMsg
+            : (Enabled ? $"运行中，每 {Seconds} 秒换页" : "未启用"));
         var modes = SelectedModes;
         foreach (var (mode, item) in _pageItems) item.Checked = modes.Contains(mode);
         var cur = Seconds;
