@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
@@ -10,6 +11,11 @@ namespace AIClockBridge;
 // Polled every 5s; the device and the mirror both render the pre-formatted
 // strings so the firmware stays dumb (and ASCII-only: it shows the code, the
 // CJK company name is only used by the mirror window).
+//
+// Taiwan stocks ("tw2330" = TSMC, "tw0050" = ETF, "twT00" = TAIEX) come from
+// TWSE's free MIS endpoint instead (Tencent has no TW market):
+//   https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=tse_2330.tw|otc_2330.tw
+// Listed (tse) and OTC (otc) are both queried; only the one that exists answers.
 sealed class StockMonitor
 {
     public record Row(string Code, string Name, string Price, string Pct, int Up);
@@ -46,6 +52,25 @@ sealed class StockMonitor
     }
 
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(5) };
+
+    // TWSE MIS wants a session cookie (from index.jsp) before the JSON API answers.
+    static readonly HttpClient TwHttp = CreateTwHttp();
+    static bool _twWarm;
+    const string TwIndexUrl = "https://mis.twse.com.tw/stock/index.jsp";
+
+    static HttpClient CreateTwHttp()
+    {
+        var h = new HttpClient(new HttpClientHandler { UseCookies = true })
+        {
+            Timeout = TimeSpan.FromSeconds(5),
+        };
+        h.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AIClockBridge");
+        h.DefaultRequestHeaders.Referer = new Uri(TwIndexUrl);
+        return h;
+    }
+
+    static bool IsTw(string symbol) =>
+        symbol.StartsWith("tw", StringComparison.OrdinalIgnoreCase) && symbol.Length > 2;
     static readonly Encoding Gbk;
 
     static StockMonitor()
@@ -59,6 +84,8 @@ sealed class StockMonitor
 
     readonly object _lock = new();
     Row[] _rows = Array.Empty<Row>();
+    // last good row per lowercase symbol, so one source failing keeps its old values
+    readonly Dictionary<string, Row> _cache = new();
     System.Threading.Timer _timer;
 
     // The device's font is ASCII-only, so CJK company names go down as
@@ -145,22 +172,108 @@ sealed class StockMonitor
             lock (_lock) _rows = Array.Empty<Row>();
             return;
         }
-        try
+        var gtimg = symbols.Where(x => !IsTw(x)).ToArray();
+        var tw = symbols.Where(IsTw).ToArray();
+
+        if (gtimg.Length > 0)
         {
-            var bytes = await Http.GetByteArrayAsync("http://qt.gtimg.cn/q=" + string.Join(",", symbols));
-            var rows = Parse(Gbk.GetString(bytes), symbols);
-            lock (_lock) _rows = rows;
-            RenderNamesIfNeeded(rows);
+            try
+            {
+                var bytes = await Http.GetByteArrayAsync("http://qt.gtimg.cn/q=" + string.Join(",", gtimg));
+                Merge(gtimg, Parse(Gbk.GetString(bytes)));
+            }
+            catch { /* transient network error: keep the previous rows */ }
         }
-        catch
+        if (tw.Length > 0)
         {
-            // transient network error: keep the previous rows
+            try { Merge(tw, await FetchTw(tw)); }
+            catch { _twWarm = false; /* keep previous rows, re-warm the session next time */ }
         }
+
+        Row[] rows;
+        lock (_lock)
+        {
+            rows = symbols.Select(x => x.ToLowerInvariant())
+                .Where(_cache.ContainsKey).Select(x => _cache[x]).ToArray();
+            _rows = rows;
+        }
+        RenderNamesIfNeeded(rows);
+    }
+
+    /// A source answered: replace its symbols (drop ones it no longer knows).
+    void Merge(string[] source, Dictionary<string, Row> fresh)
+    {
+        lock (_lock)
+        {
+            foreach (var x in source)
+            {
+                var k = x.ToLowerInvariant();
+                if (fresh.TryGetValue(k, out var row)) _cache[k] = row;
+                else _cache.Remove(k);
+            }
+        }
+    }
+
+    /// TWSE MIS batch quote. JSON: msgArray[] of { c=code, n=name, z=last trade
+    /// ("-" before the first trade), y=previous close, ... } - no change fields,
+    /// so change/% are computed from z and y.
+    async Task<Dictionary<string, Row>> FetchTw(string[] symbols)
+    {
+        var channels = symbols.SelectMany(TwChannels).Distinct();
+        var query = Uri.EscapeDataString(string.Join("|", channels));
+        for (var attempt = 0; ; attempt++)
+        {
+            if (!_twWarm)
+            {
+                using var warm = await TwHttp.GetAsync(TwIndexUrl);
+                _twWarm = true;
+            }
+            var url = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?json=1&delay=0&ex_ch=" + query
+                      + "&_=" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var json = await TwHttp.GetStringAsync(url);
+            var map = ParseTw(json);
+            if (map.Count > 0 || attempt >= 1) return map;
+            _twWarm = false; // empty answer: session probably expired, re-warm once
+        }
+    }
+
+    /// "tw2330" -> tse_2330.tw + otc_2330.tw; "twT00" (TAIEX index) -> tse_t00.tw
+    static IEnumerable<string> TwChannels(string symbol)
+    {
+        var body = symbol[2..].ToUpperInvariant();
+        if (body == "T00") return new[] { "tse_t00.tw" };
+        return new[] { $"tse_{body}.tw", $"otc_{body}.tw" };
+    }
+
+    static Dictionary<string, Row> ParseTw(string json)
+    {
+        var map = new Dictionary<string, Row>();
+        using var doc = JsonDocument.Parse(json);
+        if (!doc.RootElement.TryGetProperty("msgArray", out var arr)) return map;
+        foreach (var e in arr.EnumerateArray())
+        {
+            string S(string k) => e.TryGetProperty(k, out var v) && v.ValueKind == JsonValueKind.String
+                ? v.GetString() ?? "" : "";
+            var code = S("c");
+            if (code.Length == 0 ||
+                !double.TryParse(S("y"), NumberStyles.Float, CultureInfo.InvariantCulture, out var prev) ||
+                prev <= 0) continue;
+            // before the first trade z is "-": show the previous close, flat
+            if (!double.TryParse(S("z"), NumberStyles.Float, CultureInfo.InvariantCulture, out var price) ||
+                price <= 0) price = prev;
+            var chg = price - prev;
+            var pct = chg / prev * 100;
+            var name = S("n");
+            map["tw" + code.ToLowerInvariant()] = new Row(
+                code.ToUpperInvariant(), name.Length > 0 ? name : code, FormatPrice(price),
+                $"{pct:+0.00;-0.00;+0.00}%", chg > 1e-9 ? 1 : (chg < -1e-9 ? -1 : 0));
+        }
+        return map;
     }
 
     /// Response is lines of `v_sh600519="1~贵州茅台~600519~1212.00~...";`
     /// fields split by "~": [1]=name [3]=price [31]=change [32]=change%.
-    static Row[] Parse(string text, string[] order)
+    static Dictionary<string, Row> Parse(string text)
     {
         var bySymbol = new Dictionary<string, Row>();
         foreach (var line in text.Split('\n', StringSplitOptions.RemoveEmptyEntries))
@@ -178,8 +291,7 @@ sealed class StockMonitor
                 DisplayCode(symbol), f[1], FormatPrice(price),
                 $"{pct:+0.00;-0.00}%", chg > 0 ? 1 : (chg < 0 ? -1 : 0));
         }
-        return order.Select(s => s.ToLowerInvariant())
-            .Where(bySymbol.ContainsKey).Select(s => bySymbol[s]).ToArray();
+        return bySymbol;
     }
 
     /// "sh600519" -> "600519", "usAAPL" -> "AAPL", "hk00700" -> "00700"
