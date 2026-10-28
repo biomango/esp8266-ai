@@ -65,7 +65,7 @@ sealed class StockMonitor
             Timeout = TimeSpan.FromSeconds(5),
         };
         h.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AIClockBridge");
-        h.DefaultRequestHeaders.Referer = new Uri(TwIndexUrl);
+        h.DefaultRequestHeaders.Referrer = new Uri(TwIndexUrl);
         return h;
     }
 
