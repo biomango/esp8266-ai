@@ -1,0 +1,28 @@
+name: build-windows-exe
+
+on:
+  workflow_dispatch:   # 在 Actions 頁面手動按 Run workflow
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish single-file exe (no .NET runtime needed on the target PC)
+        working-directory: windows-app/AIClockBridge
+        run: >
+          dotnet publish -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -o ../../out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AIClockBridge-win-x64
+          path: out/AIClockBridge.exe
