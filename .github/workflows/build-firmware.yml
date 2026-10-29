@@ -1,0 +1,28 @@
+name: build-firmware
+
+# 選用：只有在 Actions 頁面手動按 Run workflow 才會執行。
+# 用 PlatformIO 編譯韌體，產出 firmware.bin 可用 esptool 燒到 0x0。
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build
+        working-directory: firmware
+        run: pio run
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-bin
+          path: firmware/.pio/build/nodemcuv2/firmware.bin
