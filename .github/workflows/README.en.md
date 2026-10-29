@@ -35,6 +35,7 @@ A retro mini-TV with a 240×240 screen that sits on your desk showing **what Cla
 ## What this fork adds
 
 - **Custom auto-rotation**: tray menu → "自動輪播" lets you tick which pages rotate (Claude quota / Codex quota / net speed / music / stocks) and how many seconds each stays
+- **Weather page**: 22 Taiwan cities (default 高雄市; tray menu → 天氣城市), current temperature / feels-like / humidity / rain chance / wind plus a 3-day outlook from Open-Meteo (no API key). Needs the firmware rebuilt and flashed (v0.4.12+)
 - **Taiwan stocks and crypto** on the stock page (`tw2330`, `usAAPL`, `ccBTC`, `ccETH`); A-shares and HK stocks removed
 - Windows bridge only; the UI and docs are in Traditional Chinese
 

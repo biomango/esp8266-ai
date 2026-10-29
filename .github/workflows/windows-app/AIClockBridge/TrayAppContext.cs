@@ -21,14 +21,17 @@ sealed class TrayAppContext : ApplicationContext
     readonly ToolStripMenuItem _deviceInfoItem = new("裝置：未設定") { Enabled = false };
     readonly Dictionary<string, ToolStripMenuItem> _modeItems = new();
     readonly AutoRotation _rotation = new();
+    readonly WeatherMonitor _weather;
+    readonly Dictionary<string, ToolStripMenuItem> _cityItems = new();
 
     public TrayAppContext(StatusService service, UsageFetcher usage, NetSpeedMonitor netMonitor,
-                          NowPlayingMonitor nowPlaying, StockMonitor stockMonitor, int port)
+                          NowPlayingMonitor nowPlaying, StockMonitor stockMonitor, WeatherMonitor weather, int port)
     {
         _service = service;
         _usage = usage;
         _port = port;
-        _mirror = new MirrorForm(service, netMonitor, nowPlaying, stockMonitor);
+        _weather = weather;
+        _mirror = new MirrorForm(service, netMonitor, nowPlaying, stockMonitor, weather);
 
         BuildMenu();
         _trayIcon = new NotifyIcon
@@ -65,6 +68,12 @@ sealed class TrayAppContext : ApplicationContext
         return Icon.FromHandle(handle);
     }
 
+    void SyncCityChecks()
+    {
+        var cur = WeatherMonitor.City;
+        foreach (var (name, item) in _cityItems) item.Checked = name == cur;
+    }
+
     // MARK: - menu construction
 
     void BuildMenu()
@@ -83,7 +92,7 @@ sealed class TrayAppContext : ApplicationContext
         {
             ("自動（誰在幹活顯示誰）", "auto"), ("固定 Claude", "claude"),
             ("固定 Codex", "codex"), ("網速曲線", "net"), ("音樂播放", "music"),
-            ("股票行情", "stock"),
+            ("天氣預報", "weather"), ("股票行情", "stock"),
         })
         {
             var item = new ToolStripMenuItem(title);
@@ -93,6 +102,23 @@ sealed class TrayAppContext : ApplicationContext
         }
         _menu.Items.Add(displayMenu);
         _menu.Items.Add(_rotation.BuildMenu());
+
+        var cityMenu = new ToolStripMenuItem("天氣城市");
+        foreach (var (cityName, _, _) in WeatherMonitor.Cities)
+        {
+            var name = cityName;
+            var cityItem = new ToolStripMenuItem(name);
+            cityItem.Click += (_, _) =>
+            {
+                WeatherMonitor.City = name;
+                SyncCityChecks();
+                _ = _weather.Refresh();
+            };
+            _cityItems[name] = cityItem;
+            cityMenu.DropDownItems.Add(cityItem);
+        }
+        _menu.Items.Add(cityMenu);
+        SyncCityChecks();
         // (螢幕亮度在左鍵彈出的映象頁底部，做成滑條了)
 
         _menu.Items.Add(MakeItem("設定自選股…", (_, _) =>

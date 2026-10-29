@@ -10,9 +10,10 @@ Windows 系統系統匣橋接程式：讀取 Claude Code / Codex CLI 的狀態�
   petdex 桌寵畫廊、恢復預設動畫、把本機設為裝置橋接、橋接服務地址
 - **自動輪播**：勾選要輪播的頁面（Claude 額度 / Codex 額度 / 網速 / 音樂 / 股票），
   設定每頁停留秒數；子選單第一行顯示目前狀態。手動固定某一頁會暫停輪播
+- **天氣預報**：台灣 22 縣市（右鍵 →「天氣城市」，預設高雄市），資料來自 Open-Meteo（免 API key）。橋接程式把整頁 240×240 畫面（繁體中文字、天氣圖示、三日預報）畫好，經 `/weather/screen.raw` 提供，裝置只負責逐列顯示；每 15 分鐘更新一次
 - **自選行情**：`tw2330`（台股，上市/上櫃自動判斷，資料來自證交所 MIS）、
   `usAAPL`（美股，騰訊行情）、`ccBTC`（加密貨幣，幣安公開 24h 行情，對 USDT 交易對）
-- 本地 HTTP 服務 `0.0.0.0:8765`：`/status`、`/net`、`/music`、`/stock`、`/music/cover.raw`、
+- 本地 HTTP 服務 `0.0.0.0:8765`：`/status`、`/net`、`/music`、`/stock`、`/weather`、`/weather/screen.raw`、`/music/cover.raw`、
   `/music/text.raw`、`POST /event`（Claude Code / Codex hooks 秒級狀態推送）
 - 資料來源：`%USERPROFILE%\.claude\projects` / `%USERPROFILE%\.codex\sessions`
   的 JSONL 日誌 + 各自官方用量介面（憑據讀
@@ -69,6 +70,7 @@ curl.exe -s http://localhost:8765/status
 | `PetdexService.cs` | manifest / 精靈圖 / GIF 合成 |
 | `StatusService.cs` | JSONL 日誌掃描 + hook 事件 |
 | `UsageFetcher.cs` | 官方額度介面 |
+| `WeatherMonitor.cs` | 天氣資料（Open-Meteo）+ 整頁畫面繪製 |
 | `StockMonitor.cs` | 台股 / 美股 / 加密貨幣行情 |
 | `NetSpeedMonitor.cs` | 4Hz 網速取樣環 |
 | `NowPlayingMonitor.cs` | 系統 Now Playing + 封面/文字條 RGB565 |

@@ -73,7 +73,7 @@ unsigned long lastSwitchMs = 0;
 // Display override, settable from the Mac app via POST /api/display:
 // auto = follow working status, claude/codex = pin that app on screen,
 // net/music = show Mac-side telemetry pages instead of the pet.
-enum DisplayMode { MODE_AUTO, MODE_CLAUDE, MODE_CODEX, MODE_NET, MODE_MUSIC, MODE_STOCK };
+enum DisplayMode { MODE_AUTO, MODE_CLAUDE, MODE_CODEX, MODE_NET, MODE_MUSIC, MODE_STOCK, MODE_WEATHER };
 DisplayMode displayMode = MODE_AUTO;
 
 // When AUTO and the Mac reports audio playing, the screen auto-switches to the
@@ -122,6 +122,7 @@ const unsigned long MUSIC_POLL_INTERVAL_MS = 2000;
 // Rows come pre-formatted from the bridge (GET /stock or serial #STOCK):
 // ASCII code + price/pct strings + up flag, so the firmware just paints.
 const unsigned long STOCK_POLL_INTERVAL_MS = 5000;
+const unsigned long WEATHER_POLL_INTERVAL_MS = 20000; // /weather is a tiny JSON; the bitmap is only re-fetched when its rev changes
 const int MAX_STOCKS = 4;
 struct StockRow {
   String code, price, pct;
@@ -135,6 +136,12 @@ bool stockChromeDrawn = false;
 String stockLastCode[MAX_STOCKS]; // top line (code + CJK name strip)
 String stockLastVal[MAX_STOCKS];  // value line (price + pct)
 unsigned long lastStockPollMs = 0;
+
+// ---------- weather screen state ----------
+unsigned long lastWeatherPollMs = 0;
+bool weatherChromeDrawn = false; // true once the bridge-rendered page is on screen
+bool weatherLoadingShown = false;
+int weatherDrawnRev = -1;
 // CJK names come as Mac-rendered RGB565 strips (GET /stock/names.raw, one
 // 156x16 strip per row) - names_rev says when to re-fetch. -1 = not drawn.
 const int STOCK_NAME_W = 156, STOCK_NAME_H = 16;
@@ -1304,6 +1311,86 @@ void pollMusic() {
   http.end();
 }
 
+// ---------- weather screen ----------
+// The bridge renders the WHOLE 240x240 page (Traditional Chinese text, icon,
+// 3-day strip) as big-endian RGB565 and serves it at /weather/screen.raw; the
+// device just streams it row by row - same trick as the music cover, so no
+// fonts are needed on the ESP8266. /weather is polled for a "rev" counter and
+// the bitmap is only re-downloaded when that changes (or on page entry).
+
+void drawWeatherLoading() {
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextDatum(MC_DATUM);
+  tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+  tft.drawString("Weather...", SCREEN_CX, SCREEN_CY, 2);
+  weatherLoadingShown = true;
+}
+
+bool drawWeatherFromBridge() {
+  if (WiFi.status() != WL_CONNECTED || bridgeHost.length() == 0) return false;
+  WiFiClient client;
+  HTTPClient http;
+  String url = "http://" + bridgeHost + "/weather/screen.raw";
+  http.setTimeout(BRIDGE_HTTP_TIMEOUT_MS);
+  if (!http.begin(client, url)) return false;
+  int code = http.GET();
+  if (code != HTTP_CODE_OK) {
+    http.end();
+    return false;
+  }
+  WiFiClient *stream = http.getStreamPtr();
+  const size_t rowBytes = (size_t)SCREEN_W * 2;
+  bool ok = true;
+  for (int r = 0; r < SCREEN_H; r++) {
+    if (stream->readBytes((uint8_t *)rowBuf, rowBytes) != (int)rowBytes) {
+      ok = false;
+      break;
+    }
+    tft.pushImage(0, r, SCREEN_W, 1, rowBuf);
+    yield();
+  }
+  http.end();
+  return ok;
+}
+
+void pollWeather() {
+  if (WiFi.status() != WL_CONNECTED || bridgeHost.length() == 0) return;
+  WiFiClient client;
+  HTTPClient http;
+  String url = "http://" + bridgeHost + "/weather";
+  http.setTimeout(BRIDGE_HTTP_TIMEOUT_MS);
+  if (!http.begin(client, url)) return;
+  int code = http.GET();
+  bool ready = false;
+  int rev = -1;
+  if (code == HTTP_CODE_OK) {
+    JsonDocument doc;
+    if (!deserializeJson(doc, http.getString())) {
+      ready = doc["ready"] | false;
+      rev = doc["rev"] | -1;
+    }
+  }
+  http.end();
+  if (!ready) {
+    // bridge has no data yet (first fetch still running, or offline)
+    if (!weatherChromeDrawn && !weatherLoadingShown) drawWeatherLoading();
+    return;
+  }
+  if (!weatherChromeDrawn || rev != weatherDrawnRev) {
+    if (drawWeatherFromBridge()) {
+      weatherChromeDrawn = true;
+      weatherDrawnRev = rev;
+    }
+  }
+}
+
+// Called whenever the weather page becomes the active one: repaint from scratch.
+void enterWeatherMode() {
+  weatherChromeDrawn = false;
+  weatherLoadingShown = false;
+  lastWeatherPollMs = 0; // poll + draw on the next loop tick
+}
+
 // ---------- stock watchlist screen ----------
 
 bool handleStockPayload(const String &payload) {
@@ -1565,7 +1652,7 @@ void pollBridge() {
   }
   http.end();
   DisplayMode eff = effectiveMode();
-  if (eff != MODE_NET && eff != MODE_MUSIC && eff != MODE_STOCK) {
+  if (eff != MODE_NET && eff != MODE_MUSIC && eff != MODE_STOCK && eff != MODE_WEATHER) {
     // Only a real app switch clears the screen; a plain data refresh paints
     // in place so the poll doesn't flash the whole display.
     if (updateActiveApp()) drawActiveApp();
@@ -1610,7 +1697,7 @@ void handleSerialFrame(char *line) {
       everPolled = true;
       showMainUiIfNeeded();
       DisplayMode eff = effectiveMode();
-      if (eff != MODE_NET && eff != MODE_MUSIC && eff != MODE_STOCK) {
+      if (eff != MODE_NET && eff != MODE_MUSIC && eff != MODE_STOCK && eff != MODE_WEATHER) {
         if (updateActiveApp()) drawActiveApp();
         else refreshActiveApp();
       }
@@ -1642,6 +1729,7 @@ void handleSerialFrame(char *line) {
       else if (m == "net") displayMode = MODE_NET;
       else if (m == "music") displayMode = MODE_MUSIC;
       else if (m == "stock") displayMode = MODE_STOCK;
+      else if (m == "weather") displayMode = MODE_WEATHER;
       // the effectiveMode transition handler in loop() repaints the chrome
     }
     return;
@@ -1765,6 +1853,7 @@ const char *displayModeName(DisplayMode m) {
   if (m == MODE_NET) return "net";
   if (m == MODE_MUSIC) return "music";
   if (m == MODE_STOCK) return "stock";
+  if (m == MODE_WEATHER) return "weather";
   return "auto";
 }
 
@@ -1805,8 +1894,9 @@ void handleApiDisplay() {
   else if (mode == "net") displayMode = MODE_NET;
   else if (mode == "music") displayMode = MODE_MUSIC;
   else if (mode == "stock") displayMode = MODE_STOCK;
+  else if (mode == "weather") displayMode = MODE_WEATHER;
   else {
-    webServer.send(400, "text/plain", "mode must be auto|claude|codex|net|music|stock");
+    webServer.send(400, "text/plain", "mode must be auto|claude|codex|net|music|stock|weather");
     return;
   }
   Serial.printf("[api] display mode = %s\n", mode.c_str());
@@ -1819,6 +1909,8 @@ void handleApiDisplay() {
   } else if (displayMode == MODE_STOCK) {
     stockChromeDrawn = false;
     lastStockPollMs = 0; // poll + draw on the next loop tick
+  } else if (displayMode == MODE_WEATHER) {
+    enterWeatherMode();
   } else {
     updateActiveApp();
     drawActiveApp(); // unconditional: also repaints over a previous net chart
@@ -2224,6 +2316,8 @@ void loop() {
     } else if (eff == MODE_STOCK) {
       stockChromeDrawn = false;
       lastStockPollMs = 0;
+    } else if (eff == MODE_WEATHER) {
+      enterWeatherMode();
     } else {
       updateActiveApp();
       drawActiveApp();
@@ -2254,6 +2348,12 @@ void loop() {
       if (!wiredActive()) pollStock();
     }
     if (!stockChromeDrawn || stockDirty) drawStockScreen();
+  } else if (eff == MODE_WEATHER) {
+    // weather page: bridge-rendered bitmap, re-fetched only when its rev changes
+    if (nowMs - lastWeatherPollMs >= WEATHER_POLL_INTERVAL_MS) {
+      lastWeatherPollMs = nowMs;
+      if (!wiredActive()) pollWeather();
+    }
   } else {
     // sprite walk-cycle animation (only advances while that app is showing)
     if (nowMs - lastAnimMs >= ANIM_INTERVAL_MS) {

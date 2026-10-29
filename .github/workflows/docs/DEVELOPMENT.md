@@ -275,6 +275,19 @@ ESP8266 總共只有 ~80KB RAM，一幀 120x120 的 RGB565 就 ~28KB，AnimatedG
   對迴圈角色動畫來說無所謂。
 - WiFi 上傳大檔案偶爾會瞬時掉線（broken pipe 之類），失敗重新上傳一次即可。
 
+## 天氣頁（橋接程式繪製整頁，裝置只負責顯示）
+
+- 橋接程式（`WeatherMonitor.cs`）每 15 分鐘向 Open-Meteo 取一次資料
+  （`api.open-meteo.com/v1/forecast`，台灣 22 縣市座標內建，時區 `Asia/Taipei`），
+  用 GDI+ 畫出完整的 240x240 畫面（城市、天氣圖示、溫度、體感 / 濕度 / 降雨機率 / 風速、
+  明後天預報），轉成大端 RGB565（115200 bytes）。
+- `GET /weather` → `{"ready":true,"rev":3,"temp":27.9}`；畫面內容有變時 `rev` 才加一。
+  `GET /weather/screen.raw` → 整頁 RGB565。
+- 韌體（v0.4.12 起）新增 `weather` 顯示模式：每 20 秒輪詢 `/weather`，只有進入該頁或 `rev` 改變時才下載
+  整頁畫面並逐列 `pushImage`，做法與音樂頁封面相同，所以韌體不需要任何中文字型。
+- 設定：托盤右鍵 →「天氣城市」；「螢幕顯示」與「自動輪播」都有「天氣預報」。
+- `POST /api/display?mode=weather` 可從任何地方切到天氣頁。
+
 ## 已知限制 / TODO
 
 - 參考專案裡的“黃色閃爍-需要處理”“紅色閃爍-需要批准”這類更細的狀態，目前本地日誌
