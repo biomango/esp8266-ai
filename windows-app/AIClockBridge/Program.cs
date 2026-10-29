@@ -33,6 +33,8 @@ static class Program
         service.MusicPlayingProvider = () => nowPlaying.Snapshot.Playing;
         var stockMonitor = new StockMonitor();
         stockMonitor.Start();
+        var weatherMonitor = new WeatherMonitor();
+        weatherMonitor.Start();
 
         var server = new MiniHttpServer(Port,
             routes: new()
@@ -42,12 +44,14 @@ static class Program
                 ["/net"] = () => netMonitor.ToJson(SystemStatsMonitor.Snapshot()),
                 ["/music"] = () => nowPlaying.ToJson(),
                 ["/stock"] = () => stockMonitor.ToJson(),
+                ["/weather"] = () => weatherMonitor.ToJson(),
             },
             binaryRoutes: new()
             {
                 ["/music/cover.raw"] = () => nowPlaying.CoverRgb565,
                 ["/music/text.raw"] = () => nowPlaying.TextRgb565,
                 ["/stock/names.raw"] = () => stockMonitor.NamesRgb565,
+                ["/weather/screen.raw"] = () => weatherMonitor.ScreenRgb565,
             },
             postRoutes: new()
             {
@@ -107,7 +111,7 @@ static class Program
             Console.Error.WriteLine($"[bridge] failed to bind port {Port}: {e.Message}");
         }
 
-        var context = new TrayAppContext(service, usage, netMonitor, nowPlaying, stockMonitor, Port);
+        var context = new TrayAppContext(service, usage, netMonitor, nowPlaying, stockMonitor, weatherMonitor, Port);
         usage.StartAutoRefresh();
         Application.Run(context);
     }

@@ -14,6 +14,7 @@ sealed class AutoRotation
         ("codex", "Codex 額度"),
         ("net", "網速曲線"),
         ("music", "音樂播放"),
+        ("weather", "天氣預報"),
         ("stock", "股票行情"),
     };
 

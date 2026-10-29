@@ -1,8 +1,8 @@
 /**
  * wm_strings_zh.h
- * WiFiManager 配网门户中文字符串（基于库自带 wm_strings_en.h 翻译）。
- * 通过 platformio.ini 的 -D WM_STRINGS_FILE 注入，替换整套门户 UI 文案。
- * 注意：{v} {p} {t} {i} {c} {r} {1} {2} 等是 WiFiManager 的替换 token，必须原样保留。
+ * WiFiManager 配網門戶中文字串（基於庫自帶 wm_strings_en.h 翻譯）。
+ * 透過 platformio.ini 的 -D WM_STRINGS_FILE 注入，替換整套門戶 UI 文案。
+ * 注意：{v} {p} {t} {i} {c} {r} {1} {2} 等是 WiFiManager 的替換 token，必須原樣保留。
  */
 
 #ifndef _WM_STRINGS_ZH_H_
@@ -35,14 +35,14 @@ const char HTTP_ROOT_MAIN[]        PROGMEM = "<h1>{t}</h1><h3>{v}</h3>";
 
 const char * const HTTP_PORTAL_MENU[] PROGMEM = {
 "<form action='/wifi'    method='get'><button>配置 WiFi</button></form><br/>\n", // MENU_WIFI
-"<form action='/0wifi'   method='get'><button>配置 WiFi（不扫描）</button></form><br/>\n", // MENU_WIFINOSCAN
-"<form action='/info'    method='get'><button>设备信息</button></form><br/>\n", // MENU_INFO
-"<form action='/param'   method='get'><button>参数设置</button></form><br/>\n",//MENU_PARAM
-"<form action='/close'   method='get'><button>关闭</button></form><br/>\n", // MENU_CLOSE
-"<form action='/restart' method='get'><button>重启设备</button></form><br/>\n",// MENU_RESTART
+"<form action='/0wifi'   method='get'><button>配置 WiFi（不掃描）</button></form><br/>\n", // MENU_WIFINOSCAN
+"<form action='/info'    method='get'><button>裝置資訊</button></form><br/>\n", // MENU_INFO
+"<form action='/param'   method='get'><button>引數設定</button></form><br/>\n",//MENU_PARAM
+"<form action='/close'   method='get'><button>關閉</button></form><br/>\n", // MENU_CLOSE
+"<form action='/restart' method='get'><button>重啟裝置</button></form><br/>\n",// MENU_RESTART
 "<form action='/exit'    method='get'><button>退出</button></form><br/>\n",  // MENU_EXIT
 "<form action='/erase'   method='get'><button class='D'>清除 WiFi 配置</button></form><br/>\n", // MENU_ERASE
-"<form action='/update'  method='get'><button>固件更新</button></form><br/>\n",// MENU_UPDATE
+"<form action='/update'  method='get'><button>韌體更新</button></form><br/>\n",// MENU_UPDATE
 "<hr><br/>" // MENU_SEP
 };
 
@@ -52,27 +52,27 @@ const char HTTP_ITEM_QP[]          PROGMEM = "<div class='q {h}'>{r}%</div>"; //
 const char HTTP_ITEM[]             PROGMEM = "<div><a href='#p' onclick='c(this)' data-ssid='{V}'>{v}</a>{qi}{qp}</div>"; // {q} = HTTP_ITEM_QI, {r} = HTTP_ITEM_QP
 
 const char HTTP_FORM_START[]       PROGMEM = "<form method='POST' action='{v}'>";
-const char HTTP_FORM_WIFI[]        PROGMEM = "<label for='s'>WiFi 名称</label><input id='s' name='s' maxlength='32' autocorrect='off' autocapitalize='none' placeholder='{v}'><br/><label for='p'>密码</label><input id='p' name='p' maxlength='64' type='password' placeholder='{p}'><input type='checkbox' id='showpass' onclick='f()'> <label for='showpass'>显示密码</label><br/>";
+const char HTTP_FORM_WIFI[]        PROGMEM = "<label for='s'>WiFi 名稱</label><input id='s' name='s' maxlength='32' autocorrect='off' autocapitalize='none' placeholder='{v}'><br/><label for='p'>密碼</label><input id='p' name='p' maxlength='64' type='password' placeholder='{p}'><input type='checkbox' id='showpass' onclick='f()'> <label for='showpass'>顯示密碼</label><br/>";
 const char HTTP_FORM_WIFI_END[]    PROGMEM = "";
 const char HTTP_FORM_STATIC_HEAD[] PROGMEM = "<hr><br/>";
-const char HTTP_FORM_END[]         PROGMEM = "<br/><br/><button type='submit'>保存</button></form>";
+const char HTTP_FORM_END[]         PROGMEM = "<br/><br/><button type='submit'>儲存</button></form>";
 const char HTTP_FORM_LABEL[]       PROGMEM = "<label for='{i}'>{t}</label>";
 const char HTTP_FORM_PARAM_HEAD[]  PROGMEM = "<hr><br/>";
 const char HTTP_FORM_PARAM[]       PROGMEM = "<br/><input id='{i}' name='{n}' maxlength='{l}' value='{v}' {c}>\n"; // do not remove newline!
 
-const char HTTP_SCAN_LINK[]        PROGMEM = "<br/><form action='/wifi?refresh=1' method='POST'><button name='refresh' value='1'>重新扫描</button></form>";
-const char HTTP_SAVED[]            PROGMEM = "<div class='msg'>已保存 WiFi 信息<br/>设备正在尝试连接网络。<br />如果连接失败，请重新连接设备热点再试一次</div>";
-const char HTTP_PARAMSAVED[]       PROGMEM = "<div class='msg S'>已保存<br/></div>";
+const char HTTP_SCAN_LINK[]        PROGMEM = "<br/><form action='/wifi?refresh=1' method='POST'><button name='refresh' value='1'>重新掃描</button></form>";
+const char HTTP_SAVED[]            PROGMEM = "<div class='msg'>已儲存 WiFi 資訊<br/>裝置正在嘗試連線網路。<br />如果連線失敗，請重新連線裝置熱點再試一次</div>";
+const char HTTP_PARAMSAVED[]       PROGMEM = "<div class='msg S'>已儲存<br/></div>";
 const char HTTP_END[]              PROGMEM = "</div></body></html>";
 const char HTTP_ERASEBTN[]         PROGMEM = "<br/><form action='/erase' method='get'><button class='D'>清除 WiFi 配置</button></form>";
-const char HTTP_UPDATEBTN[]        PROGMEM = "<br/><form action='/update' method='get'><button>固件更新</button></form>";
+const char HTTP_UPDATEBTN[]        PROGMEM = "<br/><form action='/update' method='get'><button>韌體更新</button></form>";
 const char HTTP_BACKBTN[]          PROGMEM = "<hr><br/><form action='/' method='get'><button>返回</button></form>";
 
-const char HTTP_STATUS_ON[]        PROGMEM = "<div class='msg S'><strong>已连接</strong>到 {v}<br/><em><small>IP 地址 {i}</small></em></div>";
-const char HTTP_STATUS_OFF[]       PROGMEM = "<div class='msg {c}'><strong>未连接</strong>到 {v}{r}</div>"; // {c=class} {v=ssid} {r=status_off}
-const char HTTP_STATUS_OFFPW[]     PROGMEM = "<br/>密码错误"; // STATION_WRONG_PASSWORD
-const char HTTP_STATUS_OFFNOAP[]   PROGMEM = "<br/>找不到该网络";   // WL_NO_SSID_AVAIL
-const char HTTP_STATUS_OFFFAIL[]   PROGMEM = "<br/>连接失败"; // WL_CONNECT_FAILED
+const char HTTP_STATUS_ON[]        PROGMEM = "<div class='msg S'><strong>已連線</strong>到 {v}<br/><em><small>IP 地址 {i}</small></em></div>";
+const char HTTP_STATUS_OFF[]       PROGMEM = "<div class='msg {c}'><strong>未連線</strong>到 {v}{r}</div>"; // {c=class} {v=ssid} {r=status_off}
+const char HTTP_STATUS_OFFPW[]     PROGMEM = "<br/>密碼錯誤"; // STATION_WRONG_PASSWORD
+const char HTTP_STATUS_OFFNOAP[]   PROGMEM = "<br/>找不到該網路";   // WL_NO_SSID_AVAIL
+const char HTTP_STATUS_OFFFAIL[]   PROGMEM = "<br/>連線失敗"; // WL_CONNECT_FAILED
 const char HTTP_STATUS_NONE[]      PROGMEM = "<div class='msg'>尚未配置 WiFi</div>";
 const char HTTP_BR[]               PROGMEM = "<br/>";
 
@@ -101,88 +101,88 @@ const char HTTP_STYLE[]            PROGMEM = "<style>"
 ":disabled {opacity: 0.5;}"
 "</style>";
 
-// 首次配网用不到帮助页，留空保持页面简洁
+// 首次配網用不到幫助頁，留空保持頁面簡潔
 const char HTTP_HELP[]             PROGMEM = "";
 
-const char HTTP_UPDATE[] PROGMEM = "上传新固件<br/><form method='POST' action='u' enctype='multipart/form-data' onchange=\"(function(el){document.getElementById('uploadbin').style.display = el.value=='' ? 'none' : 'initial';})(this)\"><input type='file' name='update' accept='.bin,application/octet-stream'><button id='uploadbin' type='submit' class='h D'>更新</button></form><small><a href='http://192.168.4.1/update' target='_blank'>* 在强制门户弹窗内可能无法使用，请在浏览器打开 http://192.168.4.1</a><small>";
-const char HTTP_UPDATE_FAIL[] PROGMEM = "<div class='msg D'><strong>更新失败！</strong><Br/>请重启设备后重试</div>";
-const char HTTP_UPDATE_SUCCESS[] PROGMEM = "<div class='msg S'><strong>更新成功。</strong> <br/> 设备正在重启...</div>";
+const char HTTP_UPDATE[] PROGMEM = "上傳新韌體<br/><form method='POST' action='u' enctype='multipart/form-data' onchange=\"(function(el){document.getElementById('uploadbin').style.display = el.value=='' ? 'none' : 'initial';})(this)\"><input type='file' name='update' accept='.bin,application/octet-stream'><button id='uploadbin' type='submit' class='h D'>更新</button></form><small><a href='http://192.168.4.1/update' target='_blank'>* 在強制門戶彈窗內可能無法使用，請在瀏覽器開啟 http://192.168.4.1</a><small>";
+const char HTTP_UPDATE_FAIL[] PROGMEM = "<div class='msg D'><strong>更新失敗！</strong><Br/>請重啟裝置後重試</div>";
+const char HTTP_UPDATE_SUCCESS[] PROGMEM = "<div class='msg S'><strong>更新成功。</strong> <br/> 裝置正在重啟...</div>";
 
 #ifdef ESP32
 	const char HTTP_INFO_esphead[]    PROGMEM = "<h3>esp32</h3><hr><dl>";
-	const char HTTP_INFO_chiprev[]    PROGMEM = "<dt>芯片版本</dt><dd>{1}</dd>";
-  	const char HTTP_INFO_lastreset[]  PROGMEM = "<dt>上次复位原因</dt><dd>CPU0: {1}<br/>CPU1: {2}</dd>";
-  	const char HTTP_INFO_aphost[]     PROGMEM = "<dt>热点主机名</dt><dd>{1}</dd>";
-    const char HTTP_INFO_psrsize[]    PROGMEM = "<dt>PSRAM 大小</dt><dd>{1} 字节</dd>";
-	const char HTTP_INFO_temp[]       PROGMEM = "<dt>温度</dt><dd>{1} C&deg; / {2} F&deg;</dd>";
-    const char HTTP_INFO_hall[]       PROGMEM = "<dt>霍尔传感器</dt><dd>{1}</dd>";
+	const char HTTP_INFO_chiprev[]    PROGMEM = "<dt>晶片版本</dt><dd>{1}</dd>";
+  	const char HTTP_INFO_lastreset[]  PROGMEM = "<dt>上次復位原因</dt><dd>CPU0: {1}<br/>CPU1: {2}</dd>";
+  	const char HTTP_INFO_aphost[]     PROGMEM = "<dt>熱點主機名</dt><dd>{1}</dd>";
+    const char HTTP_INFO_psrsize[]    PROGMEM = "<dt>PSRAM 大小</dt><dd>{1} 位元組</dd>";
+	const char HTTP_INFO_temp[]       PROGMEM = "<dt>溫度</dt><dd>{1} C&deg; / {2} F&deg;</dd>";
+    const char HTTP_INFO_hall[]       PROGMEM = "<dt>霍爾感測器</dt><dd>{1}</dd>";
 #else
 	const char HTTP_INFO_esphead[]    PROGMEM = "<h3>esp8266</h3><hr><dl>";
-	const char HTTP_INFO_fchipid[]    PROGMEM = "<dt>Flash 芯片 ID</dt><dd>{1}</dd>";
+	const char HTTP_INFO_fchipid[]    PROGMEM = "<dt>Flash 晶片 ID</dt><dd>{1}</dd>";
 	const char HTTP_INFO_corever[]    PROGMEM = "<dt>Core 版本</dt><dd>{1}</dd>";
 	const char HTTP_INFO_bootver[]    PROGMEM = "<dt>Boot 版本</dt><dd>{1}</dd>";
-	const char HTTP_INFO_lastreset[]  PROGMEM = "<dt>上次复位原因</dt><dd>{1}</dd>";
-	const char HTTP_INFO_flashsize[]  PROGMEM = "<dt>实际 Flash 大小</dt><dd>{1} 字节</dd>";
+	const char HTTP_INFO_lastreset[]  PROGMEM = "<dt>上次復位原因</dt><dd>{1}</dd>";
+	const char HTTP_INFO_flashsize[]  PROGMEM = "<dt>實際 Flash 大小</dt><dd>{1} 位元組</dd>";
 #endif
 
 const char HTTP_INFO_memsmeter[]  PROGMEM = "<br/><progress value='{1}' max='{2}'></progress></dd>";
-const char HTTP_INFO_memsketch[]  PROGMEM = "<dt>内存 - 程序大小</dt><dd>已用 / 总计（字节）<br/>{1} / {2}";
-const char HTTP_INFO_freeheap[]   PROGMEM = "<dt>内存 - 可用堆</dt><dd>{1} 字节可用</dd>";
+const char HTTP_INFO_memsketch[]  PROGMEM = "<dt>記憶體 - 程式大小</dt><dd>已用 / 總計（位元組）<br/>{1} / {2}";
+const char HTTP_INFO_freeheap[]   PROGMEM = "<dt>記憶體 - 可用堆</dt><dd>{1} 位元組可用</dd>";
 const char HTTP_INFO_wifihead[]   PROGMEM = "<br/><h3>WiFi</h3><hr>";
-const char HTTP_INFO_uptime[]     PROGMEM = "<dt>运行时间</dt><dd>{1} 分 {2} 秒</dd>";
-const char HTTP_INFO_chipid[]     PROGMEM = "<dt>芯片 ID</dt><dd>{1}</dd>";
-const char HTTP_INFO_idesize[]    PROGMEM = "<dt>Flash 大小</dt><dd>{1} 字节</dd>";
+const char HTTP_INFO_uptime[]     PROGMEM = "<dt>執行時間</dt><dd>{1} 分 {2} 秒</dd>";
+const char HTTP_INFO_chipid[]     PROGMEM = "<dt>晶片 ID</dt><dd>{1}</dd>";
+const char HTTP_INFO_idesize[]    PROGMEM = "<dt>Flash 大小</dt><dd>{1} 位元組</dd>";
 const char HTTP_INFO_sdkver[]     PROGMEM = "<dt>SDK 版本</dt><dd>{1}</dd>";
-const char HTTP_INFO_cpufreq[]    PROGMEM = "<dt>CPU 频率</dt><dd>{1}MHz</dd>";
-const char HTTP_INFO_apip[]       PROGMEM = "<dt>热点 IP</dt><dd>{1}</dd>";
-const char HTTP_INFO_apmac[]      PROGMEM = "<dt>热点 MAC</dt><dd>{1}</dd>";
-const char HTTP_INFO_apssid[]     PROGMEM = "<dt>热点 SSID</dt><dd>{1}</dd>";
+const char HTTP_INFO_cpufreq[]    PROGMEM = "<dt>CPU 頻率</dt><dd>{1}MHz</dd>";
+const char HTTP_INFO_apip[]       PROGMEM = "<dt>熱點 IP</dt><dd>{1}</dd>";
+const char HTTP_INFO_apmac[]      PROGMEM = "<dt>熱點 MAC</dt><dd>{1}</dd>";
+const char HTTP_INFO_apssid[]     PROGMEM = "<dt>熱點 SSID</dt><dd>{1}</dd>";
 const char HTTP_INFO_apbssid[]    PROGMEM = "<dt>BSSID</dt><dd>{1}</dd>";
-const char HTTP_INFO_stassid[]    PROGMEM = "<dt>已连 WiFi 名称</dt><dd>{1}</dd>";
-const char HTTP_INFO_staip[]      PROGMEM = "<dt>设备 IP</dt><dd>{1}</dd>";
-const char HTTP_INFO_stagw[]      PROGMEM = "<dt>网关</dt><dd>{1}</dd>";
-const char HTTP_INFO_stasub[]     PROGMEM = "<dt>子网掩码</dt><dd>{1}</dd>";
-const char HTTP_INFO_dnss[]       PROGMEM = "<dt>DNS 服务器</dt><dd>{1}</dd>";
-const char HTTP_INFO_host[]       PROGMEM = "<dt>主机名</dt><dd>{1}</dd>";
-const char HTTP_INFO_stamac[]     PROGMEM = "<dt>设备 MAC</dt><dd>{1}</dd>";
-const char HTTP_INFO_conx[]       PROGMEM = "<dt>连接状态</dt><dd>{1}</dd>";
-const char HTTP_INFO_autoconx[]   PROGMEM = "<dt>自动重连</dt><dd>{1}</dd>";
+const char HTTP_INFO_stassid[]    PROGMEM = "<dt>已連 WiFi 名稱</dt><dd>{1}</dd>";
+const char HTTP_INFO_staip[]      PROGMEM = "<dt>裝置 IP</dt><dd>{1}</dd>";
+const char HTTP_INFO_stagw[]      PROGMEM = "<dt>閘道器</dt><dd>{1}</dd>";
+const char HTTP_INFO_stasub[]     PROGMEM = "<dt>子網掩碼</dt><dd>{1}</dd>";
+const char HTTP_INFO_dnss[]       PROGMEM = "<dt>DNS 伺服器</dt><dd>{1}</dd>";
+const char HTTP_INFO_host[]       PROGMEM = "<dt>主機名</dt><dd>{1}</dd>";
+const char HTTP_INFO_stamac[]     PROGMEM = "<dt>裝置 MAC</dt><dd>{1}</dd>";
+const char HTTP_INFO_conx[]       PROGMEM = "<dt>連線狀態</dt><dd>{1}</dd>";
+const char HTTP_INFO_autoconx[]   PROGMEM = "<dt>自動重連</dt><dd>{1}</dd>";
 
 const char HTTP_INFO_aboutver[]     PROGMEM = "<dt>WiFiManager</dt><dd>{1}</dd>";
 const char HTTP_INFO_aboutarduino[] PROGMEM = "<dt>Arduino</dt><dd>{1}</dd>";
 const char HTTP_INFO_aboutsdk[]     PROGMEM = "<dt>ESP-SDK/IDF</dt><dd>{1}</dd>";
-const char HTTP_INFO_aboutdate[]    PROGMEM = "<dt>编译日期</dt><dd>{1}</dd>";
+const char HTTP_INFO_aboutdate[]    PROGMEM = "<dt>編譯日期</dt><dd>{1}</dd>";
 
-const char S_brand[]              PROGMEM = "AI 状态时钟"; // 门户标题
+const char S_brand[]              PROGMEM = "AI 狀態時鐘"; // 門戶標題
 const char S_debugPrefix[]        PROGMEM = "*wm:";
 const char S_y[]                  PROGMEM = "是";
 const char S_n[]                  PROGMEM = "否";
-const char S_enable[]             PROGMEM = "已启用";
+const char S_enable[]             PROGMEM = "已啟用";
 const char S_disable[]            PROGMEM = "已禁用";
 const char S_GET[]                PROGMEM = "GET";
 const char S_POST[]               PROGMEM = "POST";
 const char S_NA[]                 PROGMEM = "未知";
 const char S_passph[]             PROGMEM = "********";
-const char S_titlewifisaved[]     PROGMEM = "已保存 WiFi 信息";
-const char S_titlewifisettings[]  PROGMEM = "设置已保存";
+const char S_titlewifisaved[]     PROGMEM = "已儲存 WiFi 資訊";
+const char S_titlewifisettings[]  PROGMEM = "設定已儲存";
 const char S_titlewifi[]          PROGMEM = "配置 WiFi";
-const char S_titleinfo[]          PROGMEM = "设备信息";
-const char S_titleparam[]         PROGMEM = "参数设置";
-const char S_titleparamsaved[]    PROGMEM = "参数已保存";
+const char S_titleinfo[]          PROGMEM = "裝置資訊";
+const char S_titleparam[]         PROGMEM = "引數設定";
+const char S_titleparamsaved[]    PROGMEM = "引數已儲存";
 const char S_titleexit[]          PROGMEM = "退出";
 const char S_titlereset[]         PROGMEM = "重置";
 const char S_titleerase[]         PROGMEM = "清除";
-const char S_titleclose[]         PROGMEM = "关闭";
-const char S_options[]            PROGMEM = "选项";
-const char S_nonetworks[]         PROGMEM = "未找到 WiFi 网络，请点击重新扫描。";
-const char S_staticip[]           PROGMEM = "静态 IP";
-const char S_staticgw[]           PROGMEM = "静态网关";
-const char S_staticdns[]          PROGMEM = "静态 DNS";
-const char S_subnet[]             PROGMEM = "子网掩码";
+const char S_titleclose[]         PROGMEM = "關閉";
+const char S_options[]            PROGMEM = "選項";
+const char S_nonetworks[]         PROGMEM = "未找到 WiFi 網路，請點選重新掃描。";
+const char S_staticip[]           PROGMEM = "靜態 IP";
+const char S_staticgw[]           PROGMEM = "靜態閘道器";
+const char S_staticdns[]          PROGMEM = "靜態 DNS";
+const char S_subnet[]             PROGMEM = "子網掩碼";
 const char S_exiting[]            PROGMEM = "正在退出";
-const char S_resetting[]          PROGMEM = "设备将在几秒后重启。";
-const char S_closing[]            PROGMEM = "可以关闭此页面，配网服务仍在运行";
-const char S_error[]              PROGMEM = "发生错误";
+const char S_resetting[]          PROGMEM = "裝置將在幾秒後重啟。";
+const char S_closing[]            PROGMEM = "可以關閉此頁面，配網服務仍在執行";
+const char S_error[]              PROGMEM = "發生錯誤";
 const char S_notfound[]           PROGMEM = "File not found\n\n";
 const char S_uri[]                PROGMEM = "URI: ";
 const char S_method[]             PROGMEM = "\nMethod: ";

@@ -21,7 +21,7 @@
   <img src="docs/images/hero.jpg" width="640" alt="AI Mac Mini Display">
 </p>
 
-A retro mini-TV with a 240×240 screen that sits on your desk showing **what Claude Code / Codex CLI are doing right now and how much quota you have left**. No API key needed: everything comes from the CLI credentials and session logs already on your machine, served to the device over your LAN by the companion Mac / Windows bridge app.
+A retro mini-TV with a 240×240 screen that sits on your desk showing **what Claude Code / Codex CLI are doing right now and how much quota you have left**. No API key needed: everything comes from the CLI credentials and session logs already on your machine, served to the device over your LAN by the companion Windows bridge app.
 
 ## Features
 
@@ -32,6 +32,13 @@ A retro mini-TV with a 240×240 screen that sits on your desk showing **what Cla
 | <img src="docs/images/music.jpg" width="360" alt="Now playing"> | **Now playing**<br>Album art, title, artist and progress bar in real time; switches in automatically when music starts, back when it stops. |
 | <img src="docs/images/feature3.jpg" width="360" alt="Swappable pets"> | **Swappable pets**<br>Built-in [petdex.dev](https://petdex.dev) gallery with 3300+ open-source pets, or upload any GIF — decoded on the board itself, no reflashing needed. |
 
+## What this fork adds
+
+- **Custom auto-rotation**: tray menu → "自動輪播" lets you tick which pages rotate (Claude quota / Codex quota / net speed / music / stocks) and how many seconds each stays
+- **Weather page**: 22 Taiwan cities (default 高雄市; tray menu → 天氣城市), current temperature / feels-like / humidity / rain chance / wind plus a 3-day outlook from Open-Meteo (no API key). Needs the firmware rebuilt and flashed (v0.4.12+)
+- **Taiwan stocks and crypto** on the stock page (`tw2330`, `usAAPL`, `ccBTC`, `ccETH`); A-shares and HK stocks removed
+- Windows bridge only; the UI and docs are in Traditional Chinese
+
 ## Getting started
 
 What you need: an "SD2 mini-TV" dev board ([open-source hardware](https://oshwhub.com/q21182889/sd2), or [buy one assembled](https://mobile.yangkeduo.com/goods.html?ps=OuBjGMWE82)) and a USB **data** cable.
@@ -40,7 +47,7 @@ What you need: an "SD2 mini-TV" dev board ([open-source hardware](https://oshwhu
 
 Open **[mac.qust.me/#flash](https://mac.qust.me/#flash)** in Chrome / Edge, plug the device in over USB, click "Connect & Flash", pick the serial port and wait. No tools to install.
 
-> Serial port not showing up? On Windows install the [CH340 driver](https://www.wch.cn/downloads/CH341SER_EXE.html); macOS has it built in. Try another USB cable (many are charge-only). More troubleshooting in the [website FAQ](https://mac.qust.me/#flash-faq).
+> Serial port not showing up? On Windows install the [CH340 driver](https://www.wch.cn/downloads/CH341SER_EXE.html). Try another USB cable (many are charge-only). More troubleshooting in the [website FAQ](https://mac.qust.me/#flash-faq).
 >
 > Command-line folks can also flash `esp8266-ai-firmware-*.bin` from [Releases](https://github.com/pengchujin/esp8266-ai/releases/latest) to address `0x0` with esptool.
 
@@ -52,10 +59,9 @@ On first boot the device opens a hotspot named **`AI-Clock-Setup`**: join it fro
 
 Download from [Releases](https://github.com/pengchujin/esp8266-ai/releases/latest) and open:
 
-- **macOS**: `AIClockBridge-*-macOS.dmg`, drag into Applications (ad-hoc signed; on first launch allow it in "System Settings → Privacy & Security" and grant local-network access)
 - **Windows**: `AIClockBridge-*-Windows-x64.exe`, just double-click
 
-The bridge lives in your menu bar / tray and **auto-discovers and pairs** with the device on the same LAN — at this point the screen comes alive.
+The bridge lives in your system tray and **auto-discovers and pairs** with the device on the same LAN — at this point the screen comes alive.
 
 <p align="center">
   <img src="docs/images/working.jpg" width="640" alt="In action">
@@ -73,7 +79,6 @@ Daily use is all on the tray icon: **left-click** opens a live mirror of the dev
 
 ```
 firmware/     ESP8266 firmware (PlatformIO + Arduino, with on-board GIF decoding)
-mac-app/      macOS menu bar bridge (Swift/SPM, zero third-party dependencies)
 windows-app/  Windows tray bridge (C# / .NET 8 WinForms)
 tools/        GIF → RGB565 built-in sprite conversion script
 docs/         Developer docs (pinout, HTTP API, architecture details)
@@ -81,7 +86,7 @@ docs/         Developer docs (pinout, HTTP API, architecture details)
 
 ```bash
 cd firmware && pio run -t upload   # firmware: build + flash over USB
-cd mac-app && swift run            # Mac bridge: run locally
+cd windows-app/AIClockBridge && dotnet run   # Windows bridge: run locally
 ```
 
 Hardware pinout, display-driver gotchas, the device HTTP API and the on-board GIF decoding architecture are documented in **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** (Chinese).

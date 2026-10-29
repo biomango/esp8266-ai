@@ -43,6 +43,9 @@ sealed class MirrorControl : Control
     public bool StockMode;
     public StockMonitor.Row[] StockRows = Array.Empty<StockMonitor.Row>();
 
+    public bool WeatherMode;
+    public Bitmap WeatherBmp;
+
     public bool MusicMode;
     public string MusicTitle = "";
     public string MusicArtist = "";
@@ -120,6 +123,11 @@ sealed class MirrorControl : Control
         if (StockMode)
         {
             DrawStockScene(g);
+            return;
+        }
+        if (WeatherMode)
+        {
+            if (WeatherBmp != null) g.DrawImage(WeatherBmp, 0, 0, 240, 240);
             return;
         }
 
@@ -386,6 +394,7 @@ sealed class MirrorForm : Form
     readonly NetSpeedMonitor _netMonitor;
     readonly NowPlayingMonitor _nowPlaying;
     readonly StockMonitor _stockMonitor;
+    readonly WeatherMonitor _weather;
     readonly MirrorControl _mirror = new();
     readonly RadioButton[] _modeButtons;
     static readonly string[] Modes = { "auto", "claude", "codex", "net", "music", "stock" };
@@ -411,8 +420,9 @@ sealed class MirrorForm : Form
     bool _applyingMode; // suppress CheckedChanged while reflecting device state
 
     public MirrorForm(StatusService service, NetSpeedMonitor netMonitor, NowPlayingMonitor nowPlaying,
-                      StockMonitor stockMonitor)
+                      StockMonitor stockMonitor, WeatherMonitor weather)
     {
+        _weather = weather;
         _service = service;
         _netMonitor = netMonitor;
         _nowPlaying = nowPlaying;
@@ -600,7 +610,8 @@ sealed class MirrorForm : Form
         _applyingMode = false;
         var modeText = info.Mode == "auto" ? "自動切換"
             : info.Mode == "net" ? "網速曲線"
-            : info.Mode == "music" ? "音樂播放" : "固定顯示";
+            : info.Mode == "music" ? "音樂播放"
+            : info.Mode == "weather" ? "天氣預報" : "固定顯示";
         _statusLabel.Text = $"{info.Ip} · {modeText} · 資料 {info.Bridge}";
     }
 
@@ -613,6 +624,15 @@ sealed class MirrorForm : Form
         _mirror.NetMode = info.Effective == "net";
         _mirror.MusicMode = info.Effective == "music";
         _mirror.StockMode = info.Effective == "stock";
+        _mirror.WeatherMode = info.Effective == "weather";
+        if (_mirror.WeatherMode)
+        {
+            _mirror.WeatherBmp?.Dispose();
+            var shot = _weather.ScreenRgb565;
+            _mirror.WeatherBmp = shot.Length > 0 ? Rgb565.Decode(shot, 0, 240, 240) : null;
+            _mirror.Invalidate();
+            return;
+        }
         if (_mirror.StockMode)
         {
             _mirror.StockRows = _stockMonitor.Snapshot;
