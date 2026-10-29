@@ -10,10 +10,10 @@ sealed class AutoRotation
 {
     public static readonly (string Mode, string Title)[] Pages =
     {
-        ("claude", "Claude 额度"),
-        ("codex", "Codex 额度"),
-        ("net", "网速曲线"),
-        ("music", "音乐播放"),
+        ("claude", "Claude 額度"),
+        ("codex", "Codex 額度"),
+        ("net", "網速曲線"),
+        ("music", "音樂播放"),
         ("stock", "股票行情"),
     };
 
@@ -75,7 +75,7 @@ sealed class AutoRotation
     public void Disable()
     {
         Enabled = false;
-        _lastMsg = "已因手动切换页面而暂停，要继续请重新勾选「启用轮播」";
+        _lastMsg = "已因手動切換頁面而暫停，要繼續請重新勾選「啟用輪播」";
         SyncChecks();
     }
 
@@ -84,13 +84,13 @@ sealed class AutoRotation
         if (_busy || !Enabled) return;
         if (DeviceClient.Host.Length == 0)
         {
-            _lastMsg = "未设置设备地址（先用「自动查找并配对设备」）";
+            _lastMsg = "未設定裝置地址（先用「自動查詢並配對裝置」）";
             return;
         }
         var modes = SelectedModes;
         if (modes.Length == 0)
         {
-            _lastMsg = "没有勾选任何页面";
+            _lastMsg = "沒有勾選任何頁面";
             return;
         }
         _busy = true;
@@ -111,12 +111,12 @@ sealed class AutoRotation
                 }
             }
             await DeviceClient.SetDisplayMode(next);
-            _lastMsg = $"{DateTime.Now:HH:mm:ss} 已切换到 {title}";
+            _lastMsg = $"{DateTime.Now:HH:mm:ss} 已切換到 {title}";
         }
         catch (Exception e)
         {
             // device offline / busy: try again on the next tick
-            _lastMsg = $"{DateTime.Now:HH:mm:ss} 切换失败：{e.Message}";
+            _lastMsg = $"{DateTime.Now:HH:mm:ss} 切換失敗：{e.Message}";
         }
         finally
         {
@@ -126,13 +126,13 @@ sealed class AutoRotation
 
     public ToolStripMenuItem BuildMenu()
     {
-        var root = new ToolStripMenuItem("自动轮播");
+        var root = new ToolStripMenuItem("自動輪播");
         root.DropDownOpening += (_, _) => SyncChecks();
 
-        _statusItem = new ToolStripMenuItem("状态：…") { Enabled = false };
+        _statusItem = new ToolStripMenuItem("狀態：…") { Enabled = false };
         root.DropDownItems.Add(_statusItem);
 
-        _enableItem = new ToolStripMenuItem("启用轮播") { CheckOnClick = true };
+        _enableItem = new ToolStripMenuItem("啟用輪播") { CheckOnClick = true };
         _enableItem.Click += async (_, _) =>
         {
             Enabled = _enableItem.Checked; // CheckOnClick already flipped it
@@ -152,7 +152,7 @@ sealed class AutoRotation
         }
         root.DropDownItems.Add(new ToolStripSeparator());
 
-        var secMenu = new ToolStripMenuItem("每页停留时间");
+        var secMenu = new ToolStripMenuItem("每頁停留時間");
         foreach (var secs in IntervalChoices)
         {
             var item = new ToolStripMenuItem($"{secs} 秒");
@@ -161,11 +161,11 @@ sealed class AutoRotation
             _secItems[secs] = item;
             secMenu.DropDownItems.Add(item);
         }
-        _customSecItem = new ToolStripMenuItem("自定义…");
+        _customSecItem = new ToolStripMenuItem("自定義…");
         _customSecItem.Click += (_, _) =>
         {
-            var input = InputDialog.Show("轮播间隔",
-                $"每页停留的秒数（{MinSecs}–{MaxSecs}）", Seconds.ToString(), "10");
+            var input = InputDialog.Show("輪播間隔",
+                $"每頁停留的秒數（{MinSecs}–{MaxSecs}）", Seconds.ToString(), "10");
             if (input != null && int.TryParse(input.Trim(), out var v)) ApplySeconds(v);
         };
         secMenu.DropDownItems.Add(_customSecItem);
@@ -195,8 +195,8 @@ sealed class AutoRotation
     {
         if (_enableItem == null) return;
         _enableItem.Checked = Enabled;
-        _statusItem.Text = "状态：" + (_lastMsg.Length > 0 ? _lastMsg
-            : (Enabled ? $"运行中，每 {Seconds} 秒换页" : "未启用"));
+        _statusItem.Text = "狀態：" + (_lastMsg.Length > 0 ? _lastMsg
+            : (Enabled ? $"執行中，每 {Seconds} 秒換頁" : "未啟用"));
         var modes = SelectedModes;
         foreach (var (mode, item) in _pageItems) item.Checked = modes.Contains(mode);
         var cur = Seconds;
