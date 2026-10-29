@@ -68,7 +68,7 @@ static class DeviceClient
 
     static Uri Resolve(string path)
     {
-        var b = BaseUrl ?? throw new DeviceException("未设置设备地址，请先在菜单里填写设备 IP");
+        var b = BaseUrl ?? throw new DeviceException("未設定裝置地址，請先在選單裡填寫裝置 IP");
         return new Uri(b, path);
     }
 
@@ -84,7 +84,7 @@ static class DeviceClient
         catch (DeviceException) { throw; }
         catch (Exception e)
         {
-            throw new DeviceException($"无法连接设备：{e.Message}");
+            throw new DeviceException($"無法連線裝置：{e.Message}");
         }
         try
         {
@@ -118,7 +118,7 @@ static class DeviceClient
         }
         catch (Exception)
         {
-            throw new DeviceException("设备响应解析失败");
+            throw new DeviceException("裝置響應解析失敗");
         }
     }
 
@@ -151,7 +151,7 @@ static class DeviceClient
         }
         catch (Exception e)
         {
-            throw new DeviceException($"上传失败：{e.Message}");
+            throw new DeviceException($"上傳失敗：{e.Message}");
         }
         using (resp) await ThrowUnlessOk(resp);
     }
@@ -172,9 +172,9 @@ static class DeviceClient
         catch (DeviceException) { throw; }
         catch (Exception e)
         {
-            throw new DeviceException($"拉取动画失败：{e.Message}");
+            throw new DeviceException($"拉取動畫失敗：{e.Message}");
         }
-        if (data.Length <= 1) throw new DeviceException("设备响应解析失败");
+        if (data.Length <= 1) throw new DeviceException("裝置響應解析失敗");
         return data;
     }
 
@@ -192,7 +192,7 @@ static class DeviceClient
         }
         catch (Exception e)
         {
-            throw new DeviceException($"请求失败：{e.Message}");
+            throw new DeviceException($"請求失敗：{e.Message}");
         }
         using (resp) await ThrowUnlessOk(resp);
     }
@@ -202,7 +202,7 @@ static class DeviceClient
         if (resp.IsSuccessStatusCode) return;
         var msg = "";
         try { msg = await resp.Content.ReadAsStringAsync(); } catch { }
-        throw new DeviceException($"设备返回 HTTP {(int)resp.StatusCode} {msg}");
+        throw new DeviceException($"裝置返回 HTTP {(int)resp.StatusCode} {msg}");
     }
 
     static string Str(JsonElement o, string k, string dflt = "")
@@ -253,7 +253,7 @@ static class DeviceClient
 
         foreach (var ip in candidates)
         {
-            progress($"验证 {ip}…");
+            progress($"驗證 {ip}…");
             if (await VerifyDevice(ip))
             {
                 Host = ip;
@@ -271,7 +271,7 @@ static class DeviceClient
         var dot = myIp?.LastIndexOf('.') ?? -1;
         if (myIp == null || dot < 0) return null;
         var prefix = myIp[..dot];
-        progress($"扫描 {prefix}.1-254…");
+        progress($"掃描 {prefix}.1-254…");
 
         using var sem = new SemaphoreSlim(32);
         string found = null;

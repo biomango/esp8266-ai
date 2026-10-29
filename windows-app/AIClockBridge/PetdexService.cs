@@ -29,12 +29,12 @@ static class PetdexService
 
     public static readonly PetdexAnimState[] States =
     {
-        new("idle", "待机 Idle", 0, 6, 1100),
+        new("idle", "待機 Idle", 0, 6, 1100),
         new("running-right", "右跑 Run Right", 1, 8, 1060),
         new("running-left", "左跑 Run Left", 2, 8, 1060),
-        new("waving", "挥手 Waving", 3, 4, 700),
-        new("jumping", "跳跃 Jumping", 4, 5, 840),
-        new("failed", "失败 Failed", 5, 8, 1220),
+        new("waving", "揮手 Waving", 3, 4, 700),
+        new("jumping", "跳躍 Jumping", 4, 5, 840),
+        new("failed", "失敗 Failed", 5, 8, 1220),
         new("waiting", "等待 Waiting", 6, 6, 1010),
         new("running", "原地跑 Running", 7, 6, 820),
         new("review", "思考 Review", 8, 6, 1030),
@@ -54,7 +54,7 @@ static class PetdexService
         }
         catch (Exception e)
         {
-            throw new DeviceException($"petdex manifest 下载失败：{e.Message}");
+            throw new DeviceException($"petdex manifest 下載失敗：{e.Message}");
         }
         try
         {
@@ -76,7 +76,7 @@ static class PetdexService
         }
         catch (Exception)
         {
-            throw new DeviceException("petdex manifest 解析失败");
+            throw new DeviceException("petdex manifest 解析失敗");
         }
     }
 
@@ -89,7 +89,7 @@ static class PetdexService
         }
         catch (Exception e)
         {
-            throw new DeviceException($"spritesheet 下载失败：{e.Message}");
+            throw new DeviceException($"spritesheet 下載失敗：{e.Message}");
         }
         try
         {
@@ -97,7 +97,7 @@ static class PetdexService
         }
         catch (Exception)
         {
-            throw new DeviceException("spritesheet 解码失败（WebP）");
+            throw new DeviceException("spritesheet 解碼失敗（WebP）");
         }
     }
 

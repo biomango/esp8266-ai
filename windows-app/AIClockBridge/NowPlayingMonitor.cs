@@ -146,9 +146,9 @@ sealed class NowPlayingMonitor
                     Trimming = StringTrimming.EllipsisCharacter,
                     FormatFlags = StringFormatFlags.NoWrap,
                 };
-                using var titleFont = new Font("Microsoft YaHei UI", 16, FontStyle.Bold,
+                using var titleFont = new Font("Microsoft JhengHei UI", 16, FontStyle.Bold,
                                                GraphicsUnit.Pixel);
-                using var artistFont = new Font("Microsoft YaHei UI", 12, FontStyle.Regular,
+                using var artistFont = new Font("Microsoft JhengHei UI", 12, FontStyle.Regular,
                                                 GraphicsUnit.Pixel);
                 using var titleBrush = new SolidBrush(titleColor);
                 using var artistBrush = new SolidBrush(Color.FromArgb(184, 184, 184));

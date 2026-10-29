@@ -3,7 +3,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace AIClockBridge;
 
-// "更换桌宠动画" window: browse petdex.dev's gallery, preview an animation
+// "更換桌寵動畫" window: browse petdex.dev's gallery, preview an animation
 // row, and push it to the clock as the Claude or Codex character. Singleton
 // so the tray menu can open it repeatedly.
 sealed class PetPickerForm : Form
@@ -34,13 +34,13 @@ sealed class PetPickerForm : Form
 
     PetPickerForm()
     {
-        Text = "更换桌宠动画（petdex.dev）";
+        Text = "更換桌寵動畫（petdex.dev）";
         StartPosition = FormStartPosition.CenterScreen;
-        Font = new Font("Microsoft YaHei UI", 9f);
+        Font = new Font("Microsoft JhengHei UI", 9f);
         ClientSize = new Size(Px(480), Px(620));
         MinimumSize = new Size(Px(420), Px(520));
 
-        _searchBox.PlaceholderText = "搜索 3300+ 桌宠（如 pikachu、boba…）";
+        _searchBox.PlaceholderText = "搜尋 3300+ 桌寵（如 pikachu、boba…）";
         _searchBox.TextChanged += (_, _) => ApplyFilter();
 
         _listBox.IntegralHeight = false;
@@ -59,7 +59,7 @@ sealed class PetPickerForm : Form
         _preview.BackColor = Color.Black;
         _preview.SizeMode = PictureBoxSizeMode.Zoom; // PictureBox animates GIFs natively
 
-        _uploadButton.Text = "上传到设备";
+        _uploadButton.Text = "上傳到裝置";
         _uploadButton.Enabled = false;
         _uploadButton.Click += async (_, _) => await UploadTapped();
         AcceptButton = _uploadButton;
@@ -98,17 +98,17 @@ sealed class PetPickerForm : Form
 
     async Task LoadManifest()
     {
-        _statusLabel.Text = "正在加载 petdex 桌宠列表…";
+        _statusLabel.Text = "正在載入 petdex 桌寵列表…";
         try
         {
             var pets = await PetdexService.LoadManifest();
             _allPets = pets.OrderBy(p => p.DisplayName, StringComparer.OrdinalIgnoreCase).ToList();
             ApplyFilter();
-            _statusLabel.Text = $"共 {pets.Count} 个桌宠，选择后可预览";
+            _statusLabel.Text = $"共 {pets.Count} 個桌寵，選擇後可預覽";
         }
         catch (Exception e)
         {
-            _statusLabel.Text = $"加载失败：{e.Message}";
+            _statusLabel.Text = $"載入失敗：{e.Message}";
         }
     }
 
@@ -161,14 +161,14 @@ sealed class PetPickerForm : Form
         }
         else
         {
-            _statusLabel.Text = $"正在下载 {pet.DisplayName} 的动画…";
+            _statusLabel.Text = $"正在下載 {pet.DisplayName} 的動畫…";
             try
             {
                 sheet = await PetdexService.DownloadSpritesheet(pet);
             }
             catch (Exception e)
             {
-                if (_previewToken == token) _statusLabel.Text = $"下载失败：{e.Message}";
+                if (_previewToken == token) _statusLabel.Text = $"下載失敗：{e.Message}";
                 return;
             }
             if (_previewToken != token)
@@ -194,7 +194,7 @@ sealed class PetPickerForm : Form
         }
         else
         {
-            _statusLabel.Text = "GIF 生成失败";
+            _statusLabel.Text = "GIF 生成失敗";
         }
     }
 
@@ -208,20 +208,20 @@ sealed class PetPickerForm : Form
         var gif = await Task.Run(() => PetdexService.BuildGif(sheet, state, s.W, s.H));
         if (gif == null)
         {
-            _statusLabel.Text = "GIF 生成失败";
+            _statusLabel.Text = "GIF 生成失敗";
             return;
         }
         _uploadButton.Enabled = false;
-        _statusLabel.Text = "正在上传到设备并解码（约几秒）…";
+        _statusLabel.Text = "正在上傳到裝置並解碼（約幾秒）…";
         try
         {
             await DeviceClient.UploadGif(gif, s.Slot);
             _statusLabel.Text =
-                $"✅ 已应用：{pet.DisplayName} 现在是 {(s.Slot == "claude" ? "Claude" : "Codex")} 的桌宠";
+                $"✅ 已應用：{pet.DisplayName} 現在是 {(s.Slot == "claude" ? "Claude" : "Codex")} 的桌寵";
         }
         catch (Exception e)
         {
-            _statusLabel.Text = $"上传失败：{e.Message}";
+            _statusLabel.Text = $"上傳失敗：{e.Message}";
         }
         finally
         {

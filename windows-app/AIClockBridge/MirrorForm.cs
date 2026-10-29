@@ -167,10 +167,10 @@ sealed class MirrorControl : Control
 
         if (!DeviceOK)
         {
-            using var font = new Font("Microsoft YaHei UI", 14, FontStyle.Bold, GraphicsUnit.Pixel);
+            using var font = new Font("Microsoft JhengHei UI", 14, FontStyle.Bold, GraphicsUnit.Pixel);
             using var fmt = new StringFormat { Alignment = StringAlignment.Center };
             using var red = new SolidBrush(Color.FromArgb(255, 69, 58));
-            g.DrawString("设备离线", font, red, new RectangleF(0, 60, 240, 20), fmt);
+            g.DrawString("裝置離線", font, red, new RectangleF(0, 60, 240, 20), fmt);
         }
 
         // approval pending: blink the whole border red over everything else
@@ -211,11 +211,11 @@ sealed class MirrorControl : Control
             FormatFlags = StringFormatFlags.NoWrap,
         };
         var title = MusicTitle.Length == 0 ? "No Music" : MusicTitle;
-        using (var font = new Font("Microsoft YaHei UI", 15, FontStyle.Bold, GraphicsUnit.Pixel))
+        using (var font = new Font("Microsoft JhengHei UI", 15, FontStyle.Bold, GraphicsUnit.Pixel))
         {
             g.DrawString(title, font, Brushes.White, new RectangleF(12, 154, 216, 24), titleFmt);
         }
-        using (var font = new Font("Microsoft YaHei UI", 12, FontStyle.Regular, GraphicsUnit.Pixel))
+        using (var font = new Font("Microsoft JhengHei UI", 12, FontStyle.Regular, GraphicsUnit.Pixel))
         {
             g.DrawString(MusicArtist, font, Brushes.LightGray,
                          new RectangleF(12, 178, 216, 20), titleFmt);
@@ -330,14 +330,14 @@ sealed class MirrorControl : Control
     void DrawStockScene(Graphics g)
     {
         using var greyBrush = new SolidBrush(Color.FromArgb(140, 140, 140));
-        using var codeFont = new Font("Microsoft YaHei UI", 7.5f);
+        using var codeFont = new Font("Microsoft JhengHei UI", 7.5f);
         using var valueFont = new Font("Consolas", 13f, FontStyle.Bold);
         using var labelFont = new Font("Consolas", 6.5f);
         if (StockRows.Length == 0)
         {
             using var center0 = new StringFormat { Alignment = StringAlignment.Center };
-            using var hintFont = new Font("Microsoft YaHei UI", 8.5f);
-            g.DrawString("未配置自选股\n右键托盘 → 设置自选股…", hintFont, greyBrush,
+            using var hintFont = new Font("Microsoft JhengHei UI", 8.5f);
+            g.DrawString("未配置自選股\n右鍵系統匣 → 設定自選股…", hintFont, greyBrush,
                          new RectangleF(0, 104, 240, 40), center0);
             return;
         }
@@ -389,7 +389,7 @@ sealed class MirrorForm : Form
     readonly MirrorControl _mirror = new();
     readonly RadioButton[] _modeButtons;
     static readonly string[] Modes = { "auto", "claude", "codex", "net", "music", "stock" };
-    static readonly string[] ModeLabels = { "自动", "Claude", "Codex", "网速", "音乐", "股票" };
+    static readonly string[] ModeLabels = { "自動", "Claude", "Codex", "網速", "音樂", "股票" };
     readonly Label _statusLabel = new();
     readonly TrackBar _brightness = new() { Minimum = 0, Maximum = 100, TickStyle = TickStyle.None };
     readonly Label _brightnessValue = new();
@@ -463,15 +463,15 @@ sealed class MirrorForm : Form
         _brightnessValue.SetBounds(Px(254), Px(346), Px(48), Px(26));
         _brightnessValue.TextAlign = ContentAlignment.MiddleRight;
         _brightnessValue.ForeColor = SystemColors.GrayText;
-        _brightnessValue.Font = new Font("Microsoft YaHei UI", 8.5f);
+        _brightnessValue.Font = new Font("Microsoft JhengHei UI", 8.5f);
         _brightnessValue.Text = "100%";
         Controls.Add(_brightnessValue);
 
         _statusLabel.SetBounds(Px(10), Px(378), Px(296), Px(36));
         _statusLabel.TextAlign = ContentAlignment.MiddleCenter;
         _statusLabel.ForeColor = SystemColors.GrayText;
-        _statusLabel.Font = new Font("Microsoft YaHei UI", 8.5f);
-        _statusLabel.Text = "连接设备中…";
+        _statusLabel.Font = new Font("Microsoft JhengHei UI", 8.5f);
+        _statusLabel.Text = "連線裝置中…";
         _statusLabel.AutoEllipsis = true;
         Controls.Add(_statusLabel);
 
@@ -585,7 +585,7 @@ sealed class MirrorForm : Form
             _mirror.DeviceOK = false;
             _mirror.Invalidate();
             _statusLabel.Text = DeviceClient.Host.Length == 0
-                ? "未设置设备地址（右键托盘 → 设置设备地址）" : $"无法连接 {DeviceClient.Host}";
+                ? "未設定裝置地址（右鍵系統匣 → 設定裝置地址）" : $"無法連線 {DeviceClient.Host}";
             return;
         }
         if (!Visible) return;
@@ -598,10 +598,10 @@ sealed class MirrorForm : Form
         _applyingMode = true;
         _modeButtons[modeIdx].Checked = true;
         _applyingMode = false;
-        var modeText = info.Mode == "auto" ? "自动切换"
-            : info.Mode == "net" ? "网速曲线"
-            : info.Mode == "music" ? "音乐播放" : "固定显示";
-        _statusLabel.Text = $"{info.Ip} · {modeText} · 数据 {info.Bridge}";
+        var modeText = info.Mode == "auto" ? "自動切換"
+            : info.Mode == "net" ? "網速曲線"
+            : info.Mode == "music" ? "音樂播放" : "固定顯示";
+        _statusLabel.Text = $"{info.Ip} · {modeText} · 資料 {info.Bridge}";
     }
 
     /// Quota lines & ring exactly as the firmware computes them from /status.

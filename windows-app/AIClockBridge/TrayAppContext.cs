@@ -18,7 +18,7 @@ sealed class TrayAppContext : ApplicationContext
 
     readonly ToolStripMenuItem _claudeUsageItem = new("Claude …") { Enabled = false };
     readonly ToolStripMenuItem _codexUsageItem = new("Codex …") { Enabled = false };
-    readonly ToolStripMenuItem _deviceInfoItem = new("设备：未设置") { Enabled = false };
+    readonly ToolStripMenuItem _deviceInfoItem = new("裝置：未設定") { Enabled = false };
     readonly Dictionary<string, ToolStripMenuItem> _modeItems = new();
     readonly AutoRotation _rotation = new();
 
@@ -74,15 +74,15 @@ sealed class TrayAppContext : ApplicationContext
         _menu.Items.Add(new ToolStripSeparator());
 
         _menu.Items.Add(_deviceInfoItem);
-        _menu.Items.Add(MakeItem("自动查找并配对设备", async (_, _) => await AutoPairAction()));
-        _menu.Items.Add(MakeItem("设置设备地址…", (_, _) => SetDeviceAddress()));
-        _menu.Items.Add(MakeItem("打开设备网页", (_, _) => OpenDevicePage()));
+        _menu.Items.Add(MakeItem("自動查詢並配對裝置", async (_, _) => await AutoPairAction()));
+        _menu.Items.Add(MakeItem("設定裝置地址…", (_, _) => SetDeviceAddress()));
+        _menu.Items.Add(MakeItem("開啟裝置網頁", (_, _) => OpenDevicePage()));
 
-        var displayMenu = new ToolStripMenuItem("屏幕显示");
+        var displayMenu = new ToolStripMenuItem("螢幕顯示");
         foreach (var (title, mode) in new[]
         {
-            ("自动（谁在干活显示谁）", "auto"), ("固定 Claude", "claude"),
-            ("固定 Codex", "codex"), ("网速曲线", "net"), ("音乐播放", "music"),
+            ("自動（誰在幹活顯示誰）", "auto"), ("固定 Claude", "claude"),
+            ("固定 Codex", "codex"), ("網速曲線", "net"), ("音樂播放", "music"),
             ("股票行情", "stock"),
         })
         {
@@ -93,14 +93,14 @@ sealed class TrayAppContext : ApplicationContext
         }
         _menu.Items.Add(displayMenu);
         _menu.Items.Add(_rotation.BuildMenu());
-        // (屏幕亮度在左键弹出的镜像页底部，做成滑条了)
+        // (螢幕亮度在左鍵彈出的映象頁底部，做成滑條了)
 
-        _menu.Items.Add(MakeItem("设置自选股…", (_, _) =>
+        _menu.Items.Add(MakeItem("設定自選股…", (_, _) =>
         {
             var input = InputDialog.Show(
-                "自选股",
-                "逗号分隔的行情代码：sh/sz=A股、hk=港股、us=美股、tw=台股、cc=加密货币\n例如 tw2330,usAAPL,ccBTC,ccETH（设备最多显示 4 只）",
-                string.Join(",", StockMonitor.Symbols), "sh000001,usAAPL");
+                "自選股",
+                "逗號分隔的行情代碼：tw=台股、us=美股、cc=加密貨幣\n例如 tw2330,usAAPL,ccBTC,ccETH（裝置最多顯示 4 檔）",
+                string.Join(",", StockMonitor.Symbols), "tw2330,ccBTC");
             if (input != null)
             {
                 StockMonitor.Symbols = input.Split(',',
@@ -108,10 +108,10 @@ sealed class TrayAppContext : ApplicationContext
             }
         }));
 
-        _menu.Items.Add(MakeItem("更换桌宠动画…（petdex）", (_, _) => OpenPetPicker()));
+        _menu.Items.Add(MakeItem("更換桌寵動畫…（petdex）", (_, _) => OpenPetPicker()));
 
-        var resetMenu = new ToolStripMenuItem("恢复默认动画");
-        foreach (var (title, slot) in new[] { ("Claude 恢复默认", "claude"), ("Codex 恢复默认", "codex") })
+        var resetMenu = new ToolStripMenuItem("恢復預設動畫");
+        foreach (var (title, slot) in new[] { ("Claude 恢復預設", "claude"), ("Codex 恢復預設", "codex") })
         {
             var item = new ToolStripMenuItem(title);
             item.Click += async (_, _) => await ResetSprite(slot);
@@ -119,15 +119,15 @@ sealed class TrayAppContext : ApplicationContext
         }
         _menu.Items.Add(resetMenu);
 
-        _menu.Items.Add(MakeItem("把本机设为设备桥接", async (_, _) => await PointBridgeHere()));
+        _menu.Items.Add(MakeItem("把本機設為裝置橋接", async (_, _) => await PointBridgeHere()));
         _menu.Items.Add(new ToolStripSeparator());
-        _menu.Items.Add(MakeItem("刷新", (_, _) =>
+        _menu.Items.Add(MakeItem("重新整理", (_, _) =>
         {
             _usage.Refresh();
             RefreshUsageLines();
             _ = RefreshDeviceSection();
         }));
-        _menu.Items.Add(MakeItem("桥接服务地址", (_, _) => ShowAddress()));
+        _menu.Items.Add(MakeItem("橋接服務地址", (_, _) => ShowAddress()));
         _menu.Items.Add(new ToolStripSeparator());
         _menu.Items.Add(MakeItem("退出", (_, _) =>
         {
@@ -158,7 +158,7 @@ sealed class TrayAppContext : ApplicationContext
         if (u.PrimaryPct.HasValue)
         {
             var s = $"5h {(int)u.PrimaryPct.Value}%";
-            if (u.PrimaryResetMin.HasValue) s += $"（{FmtMin(u.PrimaryResetMin.Value)}后重置）";
+            if (u.PrimaryResetMin.HasValue) s += $"（{FmtMin(u.PrimaryResetMin.Value)}後重置）";
             parts.Add(s);
         }
         if (u.WeeklyPct.HasValue)
@@ -167,7 +167,7 @@ sealed class TrayAppContext : ApplicationContext
             if (u.WeeklyResetMin.HasValue) s += $"（{FmtMin(u.WeeklyResetMin.Value)}）";
             parts.Add(s);
         }
-        return parts.Count == 0 ? $"{name}：额度未知" : $"{name}　" + string.Join("　", parts);
+        return parts.Count == 0 ? $"{name}：額度未知" : $"{name}　" + string.Join("　", parts);
     }
 
     static string FmtMin(int min)
@@ -182,11 +182,11 @@ sealed class TrayAppContext : ApplicationContext
         var host = DeviceClient.Host;
         if (host.Length == 0)
         {
-            _deviceInfoItem.Text = "设备：未设置地址";
+            _deviceInfoItem.Text = "裝置：未設定地址";
             foreach (var item in _modeItems.Values) item.Checked = false;
             return;
         }
-        _deviceInfoItem.Text = $"设备：{host}（连接中…）";
+        _deviceInfoItem.Text = $"裝置：{host}（連線中…）";
         DeviceInfo info;
         try
         {
@@ -194,7 +194,7 @@ sealed class TrayAppContext : ApplicationContext
         }
         catch (Exception)
         {
-            _deviceInfoItem.Text = $"设备：{host}（无法连接）";
+            _deviceInfoItem.Text = $"裝置：{host}（無法連線）";
             foreach (var item in _modeItems.Values) item.Checked = false;
             // self-heal: the device may have moved to a new DHCP address;
             // if it recently polled us from a different IP, adopt that.
@@ -208,14 +208,14 @@ sealed class TrayAppContext : ApplicationContext
         }
         var sprites = new[]
         {
-            info.ClaudeCustomSprite ? "C:自定义" : "C:默认",
-            info.CodexCustomSprite ? "X:自定义" : "X:默认",
+            info.ClaudeCustomSprite ? "C:自定義" : "C:預設",
+            info.CodexCustomSprite ? "X:自定義" : "X:預設",
         };
-        var showing = info.Mode == "net" ? "网速"
-            : info.Mode == "music" ? "音乐"
+        var showing = info.Mode == "net" ? "網速"
+            : info.Mode == "music" ? "音樂"
             : (info.Showing == "claude" ? "Claude" : "Codex");
         _deviceInfoItem.Text =
-            $"设备：{info.Ip} · 正在显示 {showing} · {string.Join(" ", sprites)}";
+            $"裝置：{info.Ip} · 正在顯示 {showing} · {string.Join(" ", sprites)}";
         foreach (var (mode, item) in _modeItems) item.Checked = mode == info.Mode;
     }
 
@@ -223,18 +223,18 @@ sealed class TrayAppContext : ApplicationContext
 
     async Task AutoPairAction()
     {
-        _deviceInfoItem.Text = "设备：正在查找…";
-        var ip = await DeviceClient.AutoPair(msg => _deviceInfoItem.Text = $"设备：{msg}");
+        _deviceInfoItem.Text = "裝置：正在查詢…";
+        var ip = await DeviceClient.AutoPair(msg => _deviceInfoItem.Text = $"裝置：{msg}");
         if (ip != null)
         {
-            Toast("配对成功", $"已找到设备并配对：{ip}");
+            Toast("配對成功", $"已找到裝置並配對：{ip}");
         }
         else
         {
-            Toast("未找到设备", """
-                局域网内没有发现 ESP8266 时钟。请确认：
-                1. 设备已通电并连上同一个 WiFi（首次使用需通过 AI-Clock-Setup 热点配网）
-                2. 路由器未开启"客户端隔离"
+            Toast("未找到裝置", """
+                區域網內沒有發現 ESP8266 時鐘。請確認：
+                1. 裝置已通電並連上同一個 WiFi（首次使用需透過 AI-Clock-Setup 熱點配網）
+                2. 路由器未開啟"客戶端隔離"
                 """);
         }
         await RefreshDeviceSection();
@@ -245,8 +245,8 @@ sealed class TrayAppContext : ApplicationContext
     void SetDeviceAddress()
     {
         var input = InputDialog.Show(
-            "设备地址",
-            "ESP8266 时钟的 IP（设备开机时屏幕上会显示，例如 192.168.1.50）",
+            "裝置地址",
+            "ESP8266 時鐘的 IP（裝置開機時螢幕上會顯示，例如 192.168.1.50）",
             DeviceClient.Host, "192.168.1.50");
         if (input == null) return;
         DeviceClient.Host = input.Trim();
@@ -274,7 +274,7 @@ sealed class TrayAppContext : ApplicationContext
         }
         catch (Exception e)
         {
-            Toast("切换失败", e.Message);
+            Toast("切換失敗", e.Message);
         }
     }
 
@@ -293,7 +293,7 @@ sealed class TrayAppContext : ApplicationContext
         }
         catch (Exception e)
         {
-            Toast("恢复失败", e.Message);
+            Toast("恢復失敗", e.Message);
         }
     }
 
@@ -302,26 +302,26 @@ sealed class TrayAppContext : ApplicationContext
         var ip = DeviceClient.LocalIPv4();
         if (ip == null)
         {
-            Toast("失败", "获取本机局域网 IP 失败");
+            Toast("失敗", "獲取本機區域網 IP 失敗");
             return;
         }
         var bridge = $"{ip}:{_port}";
         try
         {
             await DeviceClient.SetBridgeHost(bridge);
-            Toast("已设置", $"设备将从 http://{bridge}/status 拉取状态");
+            Toast("已設定", $"裝置將從 http://{bridge}/status 拉取狀態");
         }
         catch (Exception e)
         {
-            Toast("设置失败", e.Message);
+            Toast("設定失敗", e.Message);
         }
     }
 
     void ShowAddress()
     {
-        var ip = DeviceClient.LocalIPv4() ?? "<本机局域网IP>";
-        Toast("桥接服务地址",
-              $"http://{ip}:{_port}/status\n\n设备端 Bridge host 填：{ip}:{_port}");
+        var ip = DeviceClient.LocalIPv4() ?? "<本機區域網IP>";
+        Toast("橋接服務地址",
+              $"http://{ip}:{_port}/status\n\n裝置端 Bridge host 填：{ip}:{_port}");
     }
 
     static void Toast(string title, string text)
@@ -343,7 +343,7 @@ static class InputDialog
             MinimizeBox = false,
             MaximizeBox = false,
             ShowInTaskbar = false,
-            Font = new Font("Microsoft YaHei UI", 9f),
+            Font = new Font("Microsoft JhengHei UI", 9f),
             ClientSize = new Size(380, 140),
             TopMost = true,
         };
@@ -351,7 +351,7 @@ static class InputDialog
         label.SetBounds(14, 12, 352, 40);
         var textBox = new TextBox { Text = value, PlaceholderText = placeholder };
         textBox.SetBounds(14, 58, 352, 24);
-        var ok = new Button { Text = "保存", DialogResult = DialogResult.OK };
+        var ok = new Button { Text = "儲存", DialogResult = DialogResult.OK };
         ok.SetBounds(196, 96, 80, 28);
         var cancel = new Button { Text = "取消", DialogResult = DialogResult.Cancel };
         cancel.SetBounds(286, 96, 80, 28);

@@ -5,12 +5,11 @@ using System.Text.Json;
 
 namespace AIClockBridge;
 
-// Watchlist quotes from Tencent's free endpoint (no key, realtime for A-shares,
-// supports sh/sz/hk/us prefixes in one batch request, GBK-encoded response):
-//   http://qt.gtimg.cn/q=sh600519,hk00700,usAAPL
+// Watchlist quotes. US stocks ("usAAPL") come from Tencent's free endpoint
+// (no key, GBK-encoded response, one batch request):
+//   http://qt.gtimg.cn/q=usAAPL,usTSLA
 // Polled every 5s; the device and the mirror both render the pre-formatted
-// strings so the firmware stays dumb (and ASCII-only: it shows the code, the
-// CJK company name is only used by the mirror window).
+// strings so the firmware stays dumb (and ASCII-only: it shows the code only).
 //
 // Taiwan stocks ("tw2330" = TSMC, "tw0050" = ETF, "twT00" = TAIEX) come from
 // TWSE's free MIS endpoint instead (Tencent has no TW market):
@@ -25,13 +24,13 @@ sealed class StockMonitor
 
     const string SymbolsKey = "stock_symbols";
 
-    /// Comma-separated Tencent symbols ("sh600519,hk00700,usAAPL").
+    /// Comma-separated symbols: tw=Taiwan, us=US, cc=crypto ("tw2330,usAAPL,ccBTC").
     public static string[] Symbols
     {
         get
         {
             var raw = Settings.Get(SymbolsKey);
-            if (raw.Length == 0) raw = "sh000001";
+            if (raw.Length == 0) raw = "tw2330,tw0050,ccBTC,ccETH";
             return raw.Replace('，', ',') // CN comma happens
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(Normalize).ToArray();
@@ -41,16 +40,12 @@ sealed class StockMonitor
 
     /// Market prefix must be lowercase but the US ticker must stay UPPERCASE
     /// ("usaapl" gets v_pv_none_match back), so normalize both halves.
-    /// HK codes must be zero-padded to 5 digits ("hk1810" -> "hk01810",
-    /// otherwise Tencent returns v_pv_none_match).
     static string Normalize(string s)
     {
         var t = s.Trim();
         if (t.Length <= 2) return t.ToLowerInvariant();
         var prefix = t[..2].ToLowerInvariant();
         var body = t[2..].ToUpperInvariant();
-        if (prefix == "hk" && body.Length < 5 && body.All(char.IsDigit))
-            body = body.PadLeft(5, '0');
         // crypto: "ccBTC" -> "ccBTCUSDT" (unless a quote asset is already there)
         if (prefix == "cc" && !CryptoQuotes.Any(q => body.EndsWith(q)))
             body += "USDT";
@@ -156,7 +151,7 @@ sealed class StockMonitor
             {
                 g.Clear(Color.Black);
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-                using var font = new Font("Microsoft YaHei UI", 9f);
+                using var font = new Font("Microsoft JhengHei UI", 9f);
                 using var brush = new SolidBrush(Color.FromArgb(184, 184, 184));
                 using var right = new StringFormat
                 {
@@ -341,8 +336,9 @@ sealed class StockMonitor
         return map;
     }
 
-    /// Response is lines of `v_sh600519="1~贵州茅台~600519~1212.00~...";`
-    /// fields split by "~": [1]=name [3]=price [31]=change [32]=change%.
+    /// Response is lines of `v_usAAPL="200~...~...";`
+    /// fields split by "~": [3]=price [31]=change [32]=change%. The name field is
+    /// Simplified Chinese, so the ticker is shown instead.
     static Dictionary<string, Row> Parse(string text)
     {
         var bySymbol = new Dictionary<string, Row>();
@@ -358,21 +354,17 @@ sealed class StockMonitor
                 !double.TryParse(f[32], out var pct)) continue;
             // lowercase key so the case-normalized query symbol still matches
             bySymbol[symbol] = new Row(
-                DisplayCode(symbol), f[1], FormatPrice(price),
+                DisplayCode(symbol), DisplayCode(symbol), FormatPrice(price),
                 $"{pct:+0.00;-0.00}%", chg > 0 ? 1 : (chg < 0 ? -1 : 0));
         }
         return bySymbol;
     }
 
-    /// "sh600519" -> "600519", "usAAPL" -> "AAPL", "hk00700" -> "00700"
-    static string DisplayCode(string symbol)
-    {
-        foreach (var p in new[] { "sh", "sz", "bj", "hk", "us" })
-        {
-            if (symbol.StartsWith(p) && symbol.Length > 2) return symbol[2..].ToUpperInvariant();
-        }
-        return symbol.ToUpperInvariant();
-    }
+    /// "usAAPL" -> "AAPL"
+    static string DisplayCode(string symbol) =>
+        symbol.StartsWith("us") && symbol.Length > 2
+            ? symbol[2..].ToUpperInvariant()
+            : symbol.ToUpperInvariant();
 
     static string FormatPrice(double p)
     {

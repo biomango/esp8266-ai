@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace AIClockBridge;
 
-// Real quota ("额度") for both CLIs, fetched by reusing the OAuth tokens the
+// Real quota ("額度") for both CLIs, fetched by reusing the OAuth tokens the
 // CLIs already store locally, no extra login. On Windows both live in files
 // (no Keychain):
 //   Claude: %USERPROFILE%\.claude\.credentials.json, then GET
@@ -168,7 +168,7 @@ sealed class UsageFetcher
         var token = ClaudeAccessToken();
         if (token == null)
         {
-            usage.Error = "未找到 Claude Code 登录凭据（~/.claude/.credentials.json）";
+            usage.Error = "未找到 Claude Code 登入憑據（~/.claude/.credentials.json）";
             return usage;
         }
         using var req = new HttpRequestMessage(HttpMethod.Get,
@@ -188,15 +188,15 @@ sealed class UsageFetcher
         }
         catch (Exception ex)
         {
-            usage.Error = $"Claude 用量请求失败：{ex.Message}";
+            usage.Error = $"Claude 用量請求失敗：{ex.Message}";
             return usage;
         }
         if (code != 200)
         {
             usage.RateLimited = code == 429;
-            usage.Error = code == 401 ? "Claude 凭据过期，运行 claude 重新登录"
-                : code == 429 ? "Claude 用量接口限流，稍后自动重试"
-                : $"Claude 用量接口 HTTP {code}";
+            usage.Error = code == 401 ? "Claude 憑據過期，執行 claude 重新登入"
+                : code == 429 ? "Claude 用量介面限流，稍後自動重試"
+                : $"Claude 用量介面 HTTP {code}";
             return usage;
         }
         try
@@ -217,7 +217,7 @@ sealed class UsageFetcher
         }
         catch
         {
-            usage.Error = "Claude 用量响应解析失败";
+            usage.Error = "Claude 用量響應解析失敗";
         }
         return usage;
     }
@@ -255,7 +255,7 @@ sealed class UsageFetcher
         var creds = CodexCredentials();
         if (creds == null)
         {
-            usage.Error = "未找到 Codex 登录凭据 (~/.codex/auth.json)";
+            usage.Error = "未找到 Codex 登入憑據 (~/.codex/auth.json)";
             return usage;
         }
         using var req = new HttpRequestMessage(HttpMethod.Get,
@@ -276,13 +276,13 @@ sealed class UsageFetcher
         }
         catch (Exception ex)
         {
-            usage.Error = $"Codex 用量请求失败：{ex.Message}";
+            usage.Error = $"Codex 用量請求失敗：{ex.Message}";
             return usage;
         }
         if (code < 200 || code > 299)
         {
             usage.Error = code == 401 || code == 403
-                ? "Codex 凭据过期，运行 codex 重新登录" : $"Codex 用量接口 HTTP {code}";
+                ? "Codex 憑據過期，執行 codex 重新登入" : $"Codex 用量介面 HTTP {code}";
             return usage;
         }
         try
@@ -290,7 +290,7 @@ sealed class UsageFetcher
             using var doc = JsonDocument.Parse(body);
             if (!doc.RootElement.TryGetProperty("rate_limit", out var rateLimit))
             {
-                usage.Error = "Codex 用量响应解析失败";
+                usage.Error = "Codex 用量響應解析失敗";
                 return usage;
             }
             // Codex dropped the 5h window (2026-07): primary_window now carries
@@ -325,7 +325,7 @@ sealed class UsageFetcher
         }
         catch
         {
-            usage.Error = "Codex 用量响应解析失败";
+            usage.Error = "Codex 用量響應解析失敗";
         }
         return usage;
     }

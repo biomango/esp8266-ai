@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Windows port of mac-app/: same tray-icon bridge (status server, screen
+  <!-- Windows tray-icon bridge (status server, screen
        mirror, quota, net speed, now-playing, petdex picker). WinForms + WinRT
        media APIs; ImageSharp is the one third-party dep, needed because
        System.Drawing cannot decode petdex's WebP spritesheets nor author
